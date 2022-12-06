@@ -18,7 +18,6 @@ class Markdown:
     def parse(self, text:str):
         
         self.lines = self.preprocess_parser(text)
-        print(self.lines)
 
     
 

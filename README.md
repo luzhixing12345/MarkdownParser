@@ -39,7 +39,7 @@ int main(int argc,char**argv) {
     std::cout << "markdown怎么能少了代码段呢?" << std::endl;
     return 0;
 }
-```1
+```
 ```
 
 ```html
