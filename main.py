@@ -4,6 +4,7 @@ import MarkdownParser
 
 import sys
 
+
 def main():
     
     with open('test.md','r',encoding='utf-8') as f:

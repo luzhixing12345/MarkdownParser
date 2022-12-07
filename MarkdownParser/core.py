@@ -18,7 +18,7 @@ class Markdown:
     def parse(self, text:str):
         
         self.lines = self.preprocess_parser(text)
-
+        self.root = self.block_parser(self.lines)
     
 
 def parse(text:str):
