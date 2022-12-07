@@ -48,11 +48,12 @@ class HTMLLabelHandler(Handler):
         p_label      = r'<p [\s\S]*?>([\s\S]*?)<\/p>'
         image_label  = r'<image [\s\S]*?>[\s\S]*?(<\/image>)?'
         iframe_label = r'<iframe [\s\S]*?>([\s\S]*?)<\/iframe>'
+        br_label     = r'<br\/?>'
 
         self.supported_label = [
             div_label,
             span_label,
-            p_label,image_label,iframe_label
+            p_label,image_label,iframe_label,br_label
         ]
         
         self.match_results = []

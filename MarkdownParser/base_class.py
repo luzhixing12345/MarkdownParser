@@ -48,40 +48,28 @@ class Parser:
         
         self._handlers.append(new_method)
         
-        
-        
-class Handler:
-    
-    def __init__(self) -> None:
-        super().__init__()
-    
-    def match(self, *args):
-        
-        raise NotImplementedError
-        
-    def __call__(self, *args):
-
-        raise NotImplementedError
-    
 
 class Block:
     
-    def __init__(self) -> None:
+    def __init__(self, **kwargs) -> None:
         super().__init__()
+        self.input = kwargs
         self.sub_blocks = []
         
     def addBlock(self, block):
         self.sub_blocks.append(block)
-        
-    def getLastBlock(self):
-        if len(self.sub_blocks) == 0:
-            return None
-        else:
-            return self.sub_blocks[-1]
-        
+
     def __str__(self):
-        return ''
         
+        if not self.input:
+            return ''
+        
+        output = '<'
+        for k,v in self.input.items():
+            output += f'{k} = {v} | '
+        output = output[:-3] + '>'
+        return output
+
     def info(self, deep: int=0):
         # 递归输出信息
         
@@ -90,6 +78,22 @@ class Block:
         else:
             for block in self.sub_blocks:
                 print(' '*4*deep,end='')
-                print('[',block.__class__.__name__,end='')
-                print(' ] ' + str(block))
+                print(f'[{block.__class__.__name__}] {str(block)}')
                 block.info(deep+1)
+                
+class Handler:
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.RE = None
+    
+    def match(self, text: str, *args):
+        
+        if self.RE == None:
+            raise NotImplementedError
+                     
+        return bool(self.RE.search(text))
+        
+    def __call__(self, root: Block, text: str):
+        
+        raise NotImplementedError
