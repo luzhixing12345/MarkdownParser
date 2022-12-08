@@ -34,9 +34,8 @@ class BlockParser(Parser):
 class ComplexBlock(Block):
     # 用于处理复杂嵌套
     
-    def __init__(self, father:Block,**kwargs) -> None:
+    def __init__(self,**kwargs) -> None:
         super().__init__(**kwargs)
-        self.father = father
 
 class HTMLBlock(Block):
     # 处理HTML标签
@@ -49,21 +48,36 @@ class HTMLBlock(Block):
 class EmptyBlockHandler(Handler):
     # 处理空行
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         
     def match(self, text: str):
         return not text.strip()
 
     def __call__(self, root: Block, text: str):
-            
-        root.addBlock(EmptyBlock())
+        root.addBlock(EmptyBlock(text=text))
     
 class EmptyBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+class SplitBlockHandler(Handler):
+    
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r'^[-=\*]{3,} *$')      # 分隔符
+    
+    def __call__(self, root: Block, text: str):
+        root.addBlock(SplitBlock(text=text))
+        
+class SplitBlock(Block):
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+    def __str__(self):
+        return '---<br>---'
 
 class HierarchyIndentHandler(Handler):
     # 匹配层次缩进
@@ -71,9 +85,8 @@ class HierarchyIndentHandler(Handler):
     #   hello world
     #   good luck
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'^([ ]{1,})(.*)')
         
     def __call__(self, root: Block, text: str):
@@ -82,7 +95,7 @@ class HierarchyIndentHandler(Handler):
         space_number = len(match_group.group(1))
         word = match_group.group(2)
         
-        block = HierarchyBlock(space_number=space_number)
+        block = HierarchyBlock(space_number=space_number,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -98,16 +111,15 @@ class CodeBlockHandler(Handler):
     # a = 1
     # ```
 
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'`{3,}(.*)')
         
     def __call__(self, root: Block, text: str):
         
         match_group = re.match(self.RE,text)
         language = match_group.group(1).strip()
-        return root.addBlock(CodeBlock(language=language))
+        return root.addBlock(CodeBlock(language=language,text=text))
         
 class CodeBlock(Block):
     
@@ -118,8 +130,8 @@ class HashHeaderHandler(Handler):
     # 匹配标题
     # ### 123
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.parser = parser
         
         # #开头,1-6个#均可 + 一个空格 + 文字
@@ -132,7 +144,7 @@ class HashHeaderHandler(Handler):
         header = match_group.group(2).strip() # 去掉头尾多余空格
         
         # 继续匹配header中的文字
-        block = HashHeaderBlock(level=level,header=header)
+        block = HashHeaderBlock(level=level,header=header,text=text)
         self.parser.match(block,header)
         root.addBlock(block)
         
@@ -144,9 +156,8 @@ class HashHeaderBlock(Block):
 
 class TaskListHandler(Handler):
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'^[-+\*] \[([ x])\] (.*)')
         
     def __call__(self, root: Block, text: str):
@@ -155,7 +166,7 @@ class TaskListHandler(Handler):
         is_complete = match_group.group(1)
         word = match_group.group(2)
         
-        block = TaskListBlock(complete=is_complete,word=word)
+        block = TaskListBlock(complete=is_complete,word=word,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -170,9 +181,8 @@ class OListHandler(Handler):
     # 1. 123
     # 2. 123
     
-    def __init__(self, parser:BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'^\d+\. (.*)')
 
     def __call__(self, root: Block, text: str):
@@ -180,7 +190,7 @@ class OListHandler(Handler):
         match_group = re.match(self.RE,text)
         word = match_group.group(1)
         
-        block = OListBlock(word=word)
+        block = OListBlock(word=word,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -192,9 +202,8 @@ class OListBlock(Block):
 
 class UListHandler(Handler):
     
-    def __init__(self, parser:BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'^[-+\*] (.*)')
         
     def __call__(self, root: Block, text: str):
@@ -202,7 +211,7 @@ class UListHandler(Handler):
         match_group = re.match(self.RE,text)
         word = match_group.group(1)
         
-        block = UListBlock(word=word)
+        block = UListBlock(word=word,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
 
@@ -214,9 +223,8 @@ class UListBlock(Block):
 class QuoteHandler(Handler):
     # 匹配引用
     # > 123
-    def __init__(self, parser:BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'^(>{1,}) (.*)')
 
     def __call__(self, root: Block, text: str):
@@ -224,7 +232,7 @@ class QuoteHandler(Handler):
         match_group = re.match(self.RE,text)
         quote_number = len(match_group.group(1))
         word = match_group.group(2)
-        block = QuoteBlock(quote_number=quote_number, word=word)
+        block = QuoteBlock(quote_number=quote_number, word=word, text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -237,41 +245,28 @@ class ParagraphHandler(Handler):
     # 匹配图片 
     # ![asd](123)
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         self.RE = re.compile(r'(?<!\\)!\[([^\!\[\]]*?)\]\((.*?)\)')
         
+    def subFunc(self,match:re.Match):
+        word = match.group(1)
+        url = match.group(2)
+        graph_block = ParagraphBlock(word=word,url=url)
+        replace_name = self.block.register(graph_block) # 注册并替换名字
+        return replace_name
+
     def __call__(self, root: Block, text: str):
-        
-        match_groups = self.RE.finditer(text)     
-        block = ComplexBlock(root)
-        
-        str_position = []                
-        words = []
-        urls = []
-        for match_group in match_groups:
-            start, end = match_group.span()
-            word = match_group.group(1)
-            url = match_group.group(2)
             
-            str_position.append((start,end))
-            words.append(word)
-            urls.append(url)
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text       
+        new_text = re.sub(self.RE,self.subFunc,text)
         
-        new_text = ''
-        start_pos = 0
-        for (word,url,(start,end)) in zip(words,urls,str_position):
-
-            ref_block = ParagraphBlock(word=word,url=url)
-            replace_name = block.register(ref_block) # 注册并替换名字
-            new_text += text[start_pos:start] + replace_name
-            start_pos = end
-        new_text += text[start_pos:]
-            
-        self.parser.match(block,new_text)
-        root.addBlock(block)
-
+        self.parser.match(self.block,new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
         
 class ParagraphBlock(Block):
     
@@ -283,41 +278,38 @@ class ReferenceHandler(Handler):
     # 处理引用
     # [1](abc)
     
-    def __init__(self, parser:BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         # 匹配嵌套 + 忽略末尾多余 )
-        self.RE = re.compile(r'(?<!\\)\[([^\[\]]*?)\]\((.*?)\)')  
+        self.RE = re.compile(r"""(?<!\\)
+            (\[([^\[\]]*?)\]\((.*?)\)|
+            <((?:[a-zA-z@:\.\/])+?)>)
+        """,re.VERBOSE)  
+
+    def subFunc(self,match:re.Match):
+        word = match.group(2)
+        url = match.group(3)
+        # <> 的匹配
+        if url == None:
+            url = match.group(4)
+            word = url
+
+        ref_block = ReferenceBlock(word=word,url=url)
+        replace_name = self.block.register(ref_block) # 注册并替换名字
+        return replace_name
 
     def __call__(self, root: Block, text: str):
-        
-        match_groups = self.RE.finditer(text)     
-        block = ComplexBlock(root)
-        
-        str_position = []                
-        words = []
-        urls = []
-        for match_group in match_groups:
-            start, end = match_group.span()
-            word = match_group.group(1)
-            url = match_group.group(2)
-            
-            str_position.append((start,end))
-            words.append(word)
-            urls.append(url)
-        
-        new_text = ''
-        start_pos = 0
-        for (word,url,(start,end)) in zip(words,urls,str_position):
 
-            ref_block = ReferenceBlock(word=word,url=url)
-            replace_name = block.register(ref_block) # 注册并替换名字
-            new_text += text[start_pos:start] + replace_name
-            start_pos = end
-        new_text += text[start_pos:]
-            
-        self.parser.match(block,new_text)
-        root.addBlock(block)
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text
+        new_text = re.sub(self.RE,self.subFunc,text)
+
+        self.parser.match(self.block,new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block.sub_blocks[0].input['text'] = text
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
         
 class ReferenceBlock(Block):
     
@@ -329,35 +321,52 @@ class SpecialTextHandler(Handler):
     # 处理特殊字符
     # 不考虑 * 的多级嵌套
 
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
-        
-        self.split_line = re.compile(r'^[-=\*]{3,} *$')      # 分隔符
-        # <邮箱|网址>
-        self.web_link = re.compile(r'(?<!\\)<(\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*|[a-zA-z]+:\/\/[^\s]*)>')
-        # 粗体 + 斜体 ***1*** | **_1_**
-        self.bold_italic = re.compile(r'(?<!\\)(?:\*{3}(.*+)\*{3}|\*{2}_(.*+)_\*{2})')
-        self.italic = re.compile(r'(?<!\\)(?:_(.*+)_|\*(.*+)\*)')
-        self.bold = re.compile(r'(?<!\\)\*{2}(.*+)\*{2}')
-        self.delete = re.compile(r'(?<!\\)~~(.*+)~~')
-        self.highlight = re.compile(r'(?<!\\)(?:`(.*+)`|``(.*+)``)')
-        
-        self.RE = [
-            self.split_line, self.web_link, self.bold_italic,
-            self.bold, self.delete,self.highlight
-        ]
-        
-    def match(self, text: str, *args):
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r"""(?<!\\)(
+            \*{3}(.+?)\*{3}|                           # 粗体+斜体
+            \*{2}_(.+?)_\*{2}|                         # 粗体+斜体
+            \*{2}(.+?)\*{2}|                           # 粗体
+            _(.+?)_|                                   # 斜体
+            \*(.+?)\*|                                 # 斜体
+            ~~(.+?)~~|                                 # 删除线
+            ``(.+?)``|                                 # 高亮 
+            `(.+?)`                                   # 高亮                
+        )""", re.VERBOSE)
+        self.groupid_tag = {
+            2: 'bold+italics',
+            3: 'bold+italic',
+            4: 'bold',
+            5: 'italic',
+            6: 'italic',
+            7: 'delete',
+            8: 'highlight',
+            9: 'highlight'
+        }
 
-        for RE in self.RE:
-            if bool(RE.search(text)):
-                return True
-        return False
+    def subFunc(self,match:re.Match):
+        
+        for k,v in self.groupid_tag.items():
+            if match.group(k):
+                word = match.group(k)
+                tag = v
+                break
+        special_text_block = SpecialTextBlock(word=word,tag=tag)
+        replace_name = self.block.register(special_text_block) # 注册并替换名字
+        return replace_name
 
     def __call__(self, root: Block, text: str):
-
-        block = ComplexBlock(root)
+            
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text
+        new_text = re.sub(self.RE,self.subFunc,text)
+        
+        self.parser.match(self.block,new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block.sub_blocks[0].input['text'] = text
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
         
         
         
@@ -367,12 +376,38 @@ class SpecialTextBlock(Block):
         super().__init__(**kwargs)
 
 
+class TableHandler(Handler):
+    # 处理表格
+    # 不想支持原生表格...
+    
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r'^\|(?: *:?-{1,}:? *\|)+')
+        
+
+    def __call__(self, root: Block, text: str):
+        # 判断对齐方式
+        lines = text.split('|')[1:-1]
+        alignments = []
+        for line in lines:
+            if re.search(r':-+:',line):
+                alignments.append('center')
+            elif re.search(r'-:',line):
+                alignments.append('right')
+            else:
+                alignments.append('left')
+        root.addBlock(TableBlock(text=text,alignments=alignments))
+
+class TableBlock(Block):
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
 class TextHandler(Handler):
     # 处理常规文本
     
-    def __init__(self, parser: BlockParser) -> None:
-        super().__init__()
-        self.parser = parser
+    def __init__(self, parser) -> None:
+        super().__init__(parser)
         
     def match(self, text:str):  
         return True
@@ -388,7 +423,7 @@ class TextHandler(Handler):
             # 正常文本字符
             if count % 2 == 0:
                 if string:
-                    root.addBlock(TextBlock(word=string))
+                    root.addBlock(TextBlock(word=string,text=text))
             else:
                 id = string[3:-3]
                 class_object:Block = _container[id]
@@ -406,6 +441,7 @@ def buildBlockParser():
 
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 'empty', 100)
+    block_parser.register(SplitBlockHandler(block_parser), 'split', 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 'indent', 90)
     block_parser.register(CodeBlockHandler(block_parser), 'code', 80)
     block_parser.register(HashHeaderHandler(block_parser), 'hashheader', 70)
@@ -417,6 +453,7 @@ def buildBlockParser():
     block_parser.register(QuoteHandler(block_parser), 'quote', 20)
     block_parser.register(ParagraphHandler(block_parser), 'paragraph', 15)
     block_parser.register(ReferenceHandler(block_parser), 'reference', 10)
-    # block_parser.register(SpecialTextHandler(block_parser), 'specialtext', 0)
+    block_parser.register(SpecialTextHandler(block_parser), 'specialtext', 5)
+    block_parser.register(TableHandler(block_parser), 'specialtext', 4)
     block_parser.register(TextHandler(block_parser), 'text', 0)
     return block_parser

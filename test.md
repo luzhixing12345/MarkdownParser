@@ -1,19 +1,13 @@
 
-<div align="center">我猜测绝大部分使用html标签都是为了居中...</div>
 
-<div align="center">
+|学号|姓名|分数|
+|---|---|---|
+|小明|男|75|
+|小红|女|79|
+|小陆|男|92|
 
-我猜测绝大部分使用html标签都是为了居中...
-123
-</div>
-<div align="right">
-123
- </div>
 
-```html
-<div align="right"><image src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png"></image></div>
-```
-
-炸弹和监控阿斯顿`<div align="rig阿萨大大吉安卡罗ht"><image src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png"></image></div>`阿斯顿啊色情`1 2`
-
-<image src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png"></image>
+| 不会有人 | 写代码 | 居然不支持 |
+| :---         |     :---:      |          ---: |
+| md的表格   | 和它的     | 对齐方式吧    |
+| 不会吧     | 不会吧       | 不会吧      |

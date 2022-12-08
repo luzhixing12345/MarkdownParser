@@ -13,10 +13,8 @@ _counter = 0
 class Parser:
     
     def __init__(self) -> None:
-        super().__init__()
         self._handlers : List[Dict] = [] # 保存所有注册的方法
         
-    
     def _sort(self):
         
         # 按照优先级从高到低排序,使得解析时依次调用方法
@@ -61,9 +59,8 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
+        # self.input['text'] 一行输入的纯文本格式,用于恢复code block中代码
         self.sub_blocks = []
-        self.father = None   # 父对象
-
     
     def register(self, class_object):
         
@@ -103,10 +100,15 @@ class Block:
         if not self.input:
             return ''
         
-        output = '<'
+        output = '< '
         for k,v in self.input.items():
-            output += f'{k} = {v} | '
-        output = output[:-3] + '>'
+            if k == 'text':
+                continue
+            output += f'{k} = \"{v}\" | '
+        if output == '< ':
+            output = ''
+        else:
+            output = output[:-3] + ' >'
         return output
 
     def info(self, deep: int=0):
@@ -123,9 +125,10 @@ class Block:
                     
 class Handler:
     
-    def __init__(self) -> None:
-        super().__init__()
+    def __init__(self, parser=None) -> None:
+
         self.RE = None
+        self.parser = parser
         
     def match(self, text: str, *args):
         
