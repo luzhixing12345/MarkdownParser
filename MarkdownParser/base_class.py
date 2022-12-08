@@ -1,6 +1,13 @@
 
-
+import re
 from typing import List,Dict
+
+
+_container = {
+    # block类名-唯一标识符 : block类对象    
+} # 保存类对象
+
+_counter = 0
 
 
 class Parser:
@@ -8,6 +15,7 @@ class Parser:
     def __init__(self) -> None:
         super().__init__()
         self._handlers : List[Dict] = [] # 保存所有注册的方法
+        
     
     def _sort(self):
         
@@ -52,11 +60,42 @@ class Parser:
 class Block:
     
     def __init__(self, **kwargs) -> None:
-        super().__init__()
         self.input = kwargs
         self.sub_blocks = []
+        self.father = None   # 父对象
+
+    
+    def register(self, class_object):
         
+        global _counter, _container
+        _name = f'{class_object.__class__.__name__}-{str(_counter)}'
+        _counter += 1
+        
+        _container[_name] = class_object
+        
+        return '{-%' + _name + '%-}'
+
+    def restore(self, TextBlock):
+        # 这里传入 TextBlock 是因为 TextBlock 还未定义
+        global _container
+        RE = re.compile(r'({-%.*?%-})')
+        split_strings = RE.split(self.input['word'])
+
+        count = 0
+        for string in split_strings:
+            # 正常文本字符
+            if count % 2 == 0:
+                if string:
+                    self.addBlock(TextBlock(word=string))
+            else:
+                id = string[3:-3]
+                class_object:Block = _container[id]
+                class_object.restore(TextBlock)
+                self.addBlock(class_object)
+            count += 1
+    
     def addBlock(self, block):
+        
         self.sub_blocks.append(block)
 
     def __str__(self):
@@ -80,13 +119,14 @@ class Block:
                 print(' '*4*deep,end='')
                 print(f'[{block.__class__.__name__}] {str(block)}')
                 block.info(deep+1)
-                
+      
+                    
 class Handler:
     
     def __init__(self) -> None:
         super().__init__()
         self.RE = None
-    
+        
     def match(self, text: str, *args):
         
         if self.RE == None:
@@ -97,3 +137,5 @@ class Handler:
     def __call__(self, root: Block, text: str):
         
         raise NotImplementedError
+    
+    

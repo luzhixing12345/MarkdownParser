@@ -1,5 +1,5 @@
 
-from .base_class import Parser,Handler,Block
+from .base_class import Parser,Handler,Block,_container,_counter
 from typing import List
 import re
 
@@ -30,6 +30,15 @@ class BlockParser(Parser):
             else:
                 # print(method['name'] + ' missed')
                 pass
+
+class ComplexBlock(Block):
+    # 用于处理复杂嵌套
+    
+    def __init__(self, father:Block,**kwargs) -> None:
+        super().__init__(**kwargs)
+        self.father = father
+
+
 
 class EmptyBlockHandler(Handler):
     # 处理空行
@@ -114,7 +123,7 @@ class HashHeaderHandler(Handler):
         
         match_group = re.match(self.RE,text)
         level = len(match_group.group(1))
-        header = match_group.group(2)
+        header = match_group.group(2).strip() # 去掉头尾多余空格
         
         # 继续匹配header中的文字
         block = HashHeaderBlock(level=level,header=header)
@@ -225,41 +234,36 @@ class ParagraphHandler(Handler):
     def __init__(self, parser: BlockParser) -> None:
         super().__init__()
         self.parser = parser
-        self.RE = re.compile(r'(?<!\\)!\[(.*?)\]\((.*?)(\){1,})')
+        self.RE = re.compile(r'(?<!\\)!\[([^\!\[\]].*?)\]\((.*?)\)')
         
     def __call__(self, root: Block, text: str):
         
         match_groups = self.RE.finditer(text)     
-        block = Block()
+        block = ComplexBlock(root)
         
-        # 剩余字符匹配的起始位置
-        rest_position = 0
-        
+        str_position = []                
+        words = []
+        urls = []
         for match_group in match_groups:
             start, end = match_group.span()
             word = match_group.group(1)
             url = match_group.group(2)
             
-            # 处理 [123]((lll)), 虽然应该没有人这么写...
-            brackets = match_group.group(3)
-            url += brackets[:-1]
+            str_position.append((start,end))
+            words.append(word)
+            urls.append(url)
+        
+        new_text = ''
+        start_pos = 0
+        for (word,url,(start,end)) in zip(words,urls,str_position):
+
+            ref_block = ParagraphBlock(word=word,url=url)
+            replace_name = block.register(ref_block) # 注册并替换名字
+            new_text += text[start_pos:start] + replace_name
+            start_pos = end
+        new_text += text[start_pos:]
             
-            # print(start,end,word,url)
-            rest_str = text[rest_position:start]
-            if rest_str:
-                self.parser.match(block,rest_str)
-            rest_position = end
-            parph_block = ParagraphBlock(word=word,url=url)
-            block.addBlock(parph_block)
-        
-        # 匹配结尾的文字
-        rest_str = text[rest_position:]
-        if rest_str.rstrip():
-            self.parser.match(block,rest_str)
-        
-        if len(block.sub_blocks) == 1:
-            block = block.sub_blocks[0]
-                
+        self.parser.match(block,new_text)
         root.addBlock(block)
 
         
@@ -276,41 +280,37 @@ class ReferenceHandler(Handler):
     def __init__(self, parser:BlockParser) -> None:
         super().__init__()
         self.parser = parser
-        self.RE = re.compile(r'(?<!\\)\[(.*?)\]\((.*?)(\){1,})')  
+        # 匹配嵌套 + 忽略末尾多余 )
+        self.RE = re.compile(r'(?<!\\)\[([^\[\]].*?)\]\((.*?)\)')  
 
     def __call__(self, root: Block, text: str):
         
         match_groups = self.RE.finditer(text)     
-        block = Block()
+        block = ComplexBlock(root)
         
-        # 剩余字符匹配的起始位置
-        rest_position = 0
-        
+        str_position = []                
+        words = []
+        urls = []
         for match_group in match_groups:
             start, end = match_group.span()
             word = match_group.group(1)
             url = match_group.group(2)
             
-            # 处理 [123]((lll)), 虽然应该没有人这么写...
-            brackets = match_group.group(3)
-            url += brackets[:-1]
-            
-            # print(start,end,word,url)
-            rest_str = text[rest_position:start]
-            if rest_str:
-                self.parser.match(block,rest_str)
-            rest_position = end
+            str_position.append((start,end))
+            words.append(word)
+            urls.append(url)
+        
+        new_text = ''
+        start_pos = 0
+        for (word,url,(start,end)) in zip(words,urls,str_position):
+
             ref_block = ReferenceBlock(word=word,url=url)
-            block.addBlock(ref_block)
-        
-        # 匹配结尾的文字
-        rest_str = text[rest_position:]
-        if rest_str.rstrip():
-            self.parser.match(block,rest_str)
-        
-        if len(block.sub_blocks) == 1:
-            block = block.sub_blocks[0]
-                
+            replace_name = block.register(ref_block) # 注册并替换名字
+            new_text += text[start_pos:start] + replace_name
+            start_pos = end
+        new_text += text[start_pos:]
+            
+        self.parser.match(block,new_text)
         root.addBlock(block)
         
 class ReferenceBlock(Block):
@@ -351,7 +351,9 @@ class SpecialTextHandler(Handler):
 
     def __call__(self, root: Block, text: str):
 
-        ...
+        block = ComplexBlock(root)
+        
+        
         
 class SpecialTextBlock(Block):
     
@@ -371,7 +373,22 @@ class TextHandler(Handler):
     
     def __call__(self, root: Block, text: str):
         
-        root.addBlock(TextBlock(text=text))
+        global _container
+        RE = re.compile(r'({-%.*?%-})')
+        split_strings = RE.split(text)
+
+        count = 0
+        for string in split_strings:
+            # 正常文本字符
+            if count % 2 == 0:
+                if string:
+                    root.addBlock(TextBlock(word=string))
+            else:
+                id = string[3:-3]
+                class_object:Block = _container[id]
+                class_object.restore(TextBlock)
+                root.addBlock(class_object)
+            count += 1
         
 class TextBlock(Block):
     

@@ -28,6 +28,7 @@ class TextCharacterHander(Handler):
 
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         text = text.expandtabs(tabsize=self.tabsize)
+        text = re.sub(r'(?<!\\)\<!--[\s\S]*?--\>','',text)                # 去除注释
         text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行
         text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
         text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
