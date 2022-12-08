@@ -234,7 +234,7 @@ class ParagraphHandler(Handler):
     def __init__(self, parser: BlockParser) -> None:
         super().__init__()
         self.parser = parser
-        self.RE = re.compile(r'(?<!\\)!\[([^\!\[\]].*?)\]\((.*?)\)')
+        self.RE = re.compile(r'(?<!\\)!\[([^\!\[\]]*?)\]\((.*?)\)')
         
     def __call__(self, root: Block, text: str):
         
@@ -281,7 +281,7 @@ class ReferenceHandler(Handler):
         super().__init__()
         self.parser = parser
         # 匹配嵌套 + 忽略末尾多余 )
-        self.RE = re.compile(r'(?<!\\)\[([^\[\]].*?)\]\((.*?)\)')  
+        self.RE = re.compile(r'(?<!\\)\[([^\[\]]*?)\]\((.*?)\)')  
 
     def __call__(self, root: Block, text: str):
         
