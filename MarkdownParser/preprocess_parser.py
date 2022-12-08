@@ -3,7 +3,7 @@
 from .base_class import Parser,Handler
 from typing import List
 import re
-
+from .block_parser import _container, _counter,HTMLBlock
 
 class PreprocessParser(Parser):
 
@@ -29,9 +29,7 @@ class TextCharacterHander(Handler):
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         text = text.expandtabs(tabsize=self.tabsize)
         text = re.sub(r'(?<!\\)\<!--[\s\S]*?--\>','',text)                # 去除注释
-        text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行
-        text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
-        text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
+        
         # text = re.sub(r'^[ ]{1,3}[^ ]', '', text, flags=re.M) # 每行开头四个以下空格去掉
         # text = re.sub(r'[ ]{1,}$', '', text, flags=re.M)      # 每行结尾空格去掉
         return text
@@ -44,27 +42,34 @@ class HTMLLabelHandler(Handler):
     def __init__(self) -> None:
         
         super().__init__()
-        div_label    = r'<div [\s\S]*?>([\s\S]*?)<\/div>'
-        span_label   = r'<span [\s\S]*?>([\s\S]*?)<\/span>'
-        p_label      = r'<p [\s\S]*?>([\s\S]*?)<\/p>'
-        image_label  = r'<image [\s\S]*?>[\s\S]*?(<\/image>)?'
-        iframe_label = r'<iframe [\s\S]*?>([\s\S]*?)<\/iframe>'
-        br_label     = r'<br\/?>'
 
-        self.supported_label = [
-            div_label,
-            span_label,
-            p_label,image_label,iframe_label,br_label
-        ]
-        
-        self.match_results = []
+        self.RE = re.compile(r"""
+            (<div[\s\S]*?>[\s\S]*?<\/div>|         # div
+            <span[\s\S]*?>[\s\S]*?<\/span>|        # span
+            <p[\s\S]*?>[\s\S]*?<\/p>|            # p
+            <image[\s\S]*?>(?:<\/image>)?|   # image
+            <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
+            <br\/?>)"""                              # br
+            ,re.VERBOSE)
 
     def __call__(self, text: str):
         
-        # 匹配所有疑似html标签的内容,记录其位置
-        for label in self.supported_label:
-            match_result = re.finditer(re.compile(label),text)
-            self.match_results.extend([i.span() for i in match_result])
+
+        
+        def subFunc(match):
+            global _counter,_container
+            src = match.group(0)
+            block = HTMLBlock(word = src)
+            name = f'{block.__class__.__name__}-{str(_counter)}'
+            _container[name] = block
+            _counter += 1
+            return '{-%' + name + '%-}'
+        
+        text = re.sub(self.RE,subFunc,text)
+        text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行
+        text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
+        text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
+        # print(text)
         return text
 
 

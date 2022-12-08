@@ -25,7 +25,7 @@
 </div>
 <div align="right">
 
-![图片下的文字](https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png)</div>
+ </div>
 
 ```html
 <div align="right"><image src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png"></image></div>

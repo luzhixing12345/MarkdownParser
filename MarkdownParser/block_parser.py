@@ -38,7 +38,13 @@ class ComplexBlock(Block):
         super().__init__(**kwargs)
         self.father = father
 
+class HTMLBlock(Block):
+    # 处理HTML标签
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
+    def __str__(self):
+        return '<html>'
 
 class EmptyBlockHandler(Handler):
     # 处理空行
