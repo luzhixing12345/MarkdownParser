@@ -10,9 +10,13 @@ class PreprocessParser(Parser):
     def __init__(self) -> None:
         super().__init__()
 
-    def __call__(self, text:str):
-        text = super().__call__(text)
-        lines = text.split('\n')
+    def __call__(self, data:str):
+        self._sort()
+        # 按优先级逐步执行相应处理方法
+        for method in self._handlers:
+            data = method['object'](data)
+
+        lines = data.split('\n')
         return lines
 
     def getHtmlPosition(self):
@@ -67,14 +71,14 @@ class HTMLLabelHandler(Handler):
         
         text = re.sub(self.RE,subFunc,text)
         text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行
-        text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
-        text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
+        # text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
+        # text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
         # print(text)
         return text
 
 
 def buildPreprocessParser(tabsize):
-
+    # preprocess parser 用于预处理空行/注释/HTML标签
     preprocess_parser = PreprocessParser()
     preprocess_parser.register(TextCharacterHander(tabsize), 'character', priority=100)
     preprocess_parser.register(HTMLLabelHandler(), 'html', priority= 80)

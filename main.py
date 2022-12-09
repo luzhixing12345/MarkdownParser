@@ -7,7 +7,7 @@ import sys
 
 def main():
     
-    with open('test.md','r',encoding='utf-8') as f:
+    with open('testfiles/test.md','r',encoding='utf-8') as f:
         text = f.read()
         
     if len(sys.argv)==1:

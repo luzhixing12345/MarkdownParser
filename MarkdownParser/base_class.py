@@ -13,23 +13,17 @@ _counter = 0
 class Parser:
     
     def __init__(self) -> None:
-        self._handlers : List[Dict] = [] # 保存所有注册的方法
-        
+        self._handlers = [] # 保存所有注册的方法
+                
     def _sort(self):
         
         # 按照优先级从高到低排序,使得解析时依次调用方法
         self._handlers.sort(key=lambda item: item['priority'], reverse=True)
     
-    def __call__(self, data):
+    def __call__(self, *args, **kwargs):
         
-        self._sort()
-        # 按优先级逐步执行相应处理方法
-        # 前后方法的输入和输出应保持一致
-        for method in self._handlers:
-            data = method['object'](data)
-            
-        return data
-    
+        raise NotImplementedError
+        
     def __getitem__(self, key):
         for method in self._handlers:
             if method['name'] == key:
@@ -44,7 +38,7 @@ class Parser:
             priority = method['priority']
             print(f'[{name}]({priority}) : {class_name}')
     
-    def register(self, class_object:object, name:str, priority:int) -> None:
+    def register(self, class_object:object, name:str, priority:int=0) -> None:
         
         new_method = {
             'name'    : name,
@@ -59,13 +53,16 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        # self.input['text'] 一行输入的纯文本格式,用于恢复code block中代码
+        # self._text = self.input.get('text',None) # 输入的纯文本格式,用于恢复code block中代码
+        # self._word = self.input.get('word',None) # 输入的核心文本信息
         self.sub_blocks = []
+        self.block_name = self.__class__.__name__
     
     def register(self, class_object):
         
         global _counter, _container
         _name = f'{class_object.__class__.__name__}-{str(_counter)}'
+        # print("register name = ",_name)
         _counter += 1
         
         _container[_name] = class_object
@@ -111,7 +108,7 @@ class Block:
             output = output[:-3] + ' >'
         return output
 
-    def info(self, deep: int=0):
+    def info(self, deep: int=0, brief: bool=False):
         # 递归输出信息
         
         if self.sub_blocks == []:
@@ -119,8 +116,11 @@ class Block:
         else:
             for block in self.sub_blocks:
                 print(' '*4*deep,end='')
-                print(f'[{block.__class__.__name__}] {str(block)}')
-                block.info(deep+1)
+                if brief:
+                    print(f'[{block.__class__.__name__}]')
+                else:
+                    print(f'[{block.__class__.__name__}] {str(block)}')
+                block.info(deep+1, brief)
       
                     
 class Handler:
@@ -128,7 +128,7 @@ class Handler:
     def __init__(self, parser=None) -> None:
 
         self.RE = None
-        self.parser = parser
+        self.parser:Parser = parser
         
     def match(self, text: str, *args):
         
@@ -141,3 +141,14 @@ class Handler:
         
         raise NotImplementedError
     
+class Optimizer:
+    
+    def __init__(self) -> None:
+        
+        # 优化器针对的Block
+        self.target_block_names = []
+        self.is_match = False
+    
+    def __call__(self, root: Block):
+        
+        raise NotImplementedError

@@ -17,8 +17,8 @@ class BlockParser(Parser):
 
         for text in lines:
             self.match(self.root, text)
-                    
-        self.root.info()
+        # self.root.info()
+        return self.root
         
     def match(self, root:Block, text:str):
 
@@ -44,6 +44,11 @@ class HTMLBlock(Block):
 
     def __str__(self):
         return '<html>'
+    
+class ParaphgraphBlock(Block):
+    # 在本阶段不使用,在优化阶段使用
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
 class EmptyBlockHandler(Handler):
     # 处理空行
@@ -86,9 +91,8 @@ class ExtensionBlockHandler(Handler):
         }
         
     def __call__(self, root: Block, text: str):
-        re.sub
         match = re.match(self.RE,text)
-        print(match)
+        # print(match)
         for k,v in self.groupid_tag.items():
             if match.group(k):
                 tag = v
@@ -159,13 +163,19 @@ class CodeBlockHandler(Handler):
         
         match_group = re.match(self.RE,text)
         language = match_group.group(1).strip()
-        return root.addBlock(CodeBlock(language=language,text=text))
+        if language:
+            # 代码段开头
+            root.addBlock(CodeBlock(language=language,text=text,type='start'))
+        else:
+            # 代码段结尾
+            root.addBlock(CodeBlock(text=text,type='end'))
         
 class CodeBlock(Block):
     
     def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-
+        # code用于在优化阶段用于整合所有的代码
+        super().__init__(code='',**kwargs)
+        
 class HashHeaderHandler(Handler):
     # 匹配标题
     # ### 123
@@ -281,7 +291,7 @@ class QuoteBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-class ParagraphHandler(Handler):
+class PictureHandler(Handler):
     # 匹配图片 
     # ![asd](123)
     
@@ -292,8 +302,8 @@ class ParagraphHandler(Handler):
     def subFunc(self,match:re.Match):
         word = match.group(1)
         url = match.group(2)
-        graph_block = ParagraphBlock(word=word,url=url)
-        replace_name = self.block.register(graph_block) # 注册并替换名字
+        pic_block = PictureBlock(word=word,url=url)
+        replace_name = self.block.register(pic_block) # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
@@ -305,10 +315,12 @@ class ParagraphHandler(Handler):
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
+            self.block.sub_blocks[0].input['text'] = text
             self.block = self.block.sub_blocks[0]
+            
         root.addBlock(self.block)
         
-class ParagraphBlock(Block):
+class PictureBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -333,7 +345,6 @@ class ReferenceHandler(Handler):
         if url == None:
             url = match.group(4)
             word = url
-
         ref_block = ReferenceBlock(word=word,url=url)
         replace_name = self.block.register(ref_block) # 注册并替换名字
         return replace_name
@@ -484,7 +495,7 @@ class TextBlock(Block):
 
 
 def buildBlockParser():
-
+    # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 'empty', 100)
     block_parser.register(ExtensionBlockHandler(block_parser), 'extension', 99)
@@ -496,7 +507,7 @@ def buildBlockParser():
     block_parser.register(OListHandler(block_parser), 'olist', 40)
     block_parser.register(UListHandler(block_parser), 'ulist', 30)
     block_parser.register(QuoteHandler(block_parser), 'quote', 20)
-    block_parser.register(ParagraphHandler(block_parser), 'paragraph', 15)
+    block_parser.register(PictureHandler(block_parser), 'picture', 15)
     block_parser.register(ReferenceHandler(block_parser), 'reference', 10)
     block_parser.register(SpecialTextHandler(block_parser), 'specialtext', 5)
     block_parser.register(TableHandler(block_parser), 'specialtext', 4)
