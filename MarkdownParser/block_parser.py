@@ -185,7 +185,9 @@ class HashHeaderHandler(Handler):
         self.parser = parser
         
         # #开头,1-6个#均可 + 一个空格 + 文字
-        self.RE = re.compile(r'(^#{1,6}) (.*)')
+        # Typora               r'(^#{1,6}) (.+)'
+        # Markdown All in One  r'(^#{1,6}) (.?)'
+        self.RE = re.compile(r'(^#{1,6}) (.+)')
     
     def __call__(self, root: Block, text: str):
         
@@ -333,10 +335,13 @@ class ReferenceHandler(Handler):
     def __init__(self, parser) -> None:
         super().__init__(parser)
         # 匹配嵌套 + 忽略末尾多余 )
-        self.RE = re.compile(r"""(?<!\\)
-            (\[([^\[\]]*?)\]\((.*?)\)|
-            <((?:[a-zA-z@:\.\/])+?)>)
-        """,re.VERBOSE)  
+        
+        # Typora               r'(?<!\\)\[([^\[\]]*?)\]\((.*?)\)'
+        # Markdown All in One  ...
+        self.RE = re.compile(r"""(?<!\\)(
+            \[([^\[\]]*?)\]\((.*?)\)|
+            <((?:[a-zA-z@:\.\/])+?)>
+        )""",re.VERBOSE)  
 
     def subFunc(self,match:re.Match):
         word = match.group(2)
