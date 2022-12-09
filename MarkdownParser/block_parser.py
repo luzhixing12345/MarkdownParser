@@ -62,6 +62,46 @@ class EmptyBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
+
+class ExtensionBlockHandler(Handler):
+    # 自定义扩展
+    # {% note %}
+    # asdklja
+    # {%end%}
+    
+    def __init__(self, parser=None) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r"""(
+            (^{[ ]*%[ ]*note[ ]*%[ ]*}[ ]*)|
+            (^{[ ]*%[ ]*info[ ]*%[ ]*}[ ]*)|
+            (^{[ ]*%[ ]*success[ ]*%[ ]*}[ ]*)|
+            (^{[ ]*%[ ]*end[ ]*%[]*}[ ]*)
+        )""",re.VERBOSE)
+        
+        self.groupid_tag = {
+            2: 'note',
+            3: 'info',
+            4: 'success',
+            5: 'end'
+        }
+        
+    def __call__(self, root: Block, text: str):
+        re.sub
+        match = re.match(self.RE,text)
+        print(match)
+        for k,v in self.groupid_tag.items():
+            if match.group(k):
+                tag = v
+                break
+        self.block = ExtensionBlock(text=text,tag=tag)
+        root.addBlock(self.block)
+        
+
+class ExtensionBlock(Block):
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
 class SplitBlockHandler(Handler):
     
     def __init__(self, parser) -> None:
@@ -426,9 +466,15 @@ class TextHandler(Handler):
                     root.addBlock(TextBlock(word=string,text=text))
             else:
                 id = string[3:-3]
-                class_object:Block = _container[id]
-                class_object.restore(TextBlock)
-                root.addBlock(class_object)
+                try:
+                    class_object:Block = _container[id]
+                    class_object.restore(TextBlock)
+                    root.addBlock(class_object)
+                except:
+                    # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
+                    # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
+                    # 所以做一个try exception,这种情况当成文字处理
+                    root.addBlock(TextBlock(word=string,text=text))
             count += 1
         
 class TextBlock(Block):
@@ -441,12 +487,11 @@ def buildBlockParser():
 
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 'empty', 100)
+    block_parser.register(ExtensionBlockHandler(block_parser), 'extension', 99)
     block_parser.register(SplitBlockHandler(block_parser), 'split', 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 'indent', 90)
     block_parser.register(CodeBlockHandler(block_parser), 'code', 80)
     block_parser.register(HashHeaderHandler(block_parser), 'hashheader', 70)
-    # block_parser.register(SetextHeaderHandler(), 'setextheader', 60)
-    # block_parser.register(HRHandler(), 'hr', 50)
     block_parser.register(TaskListHandler(block_parser), 'tlist', 50)
     block_parser.register(OListHandler(block_parser), 'olist', 40)
     block_parser.register(UListHandler(block_parser), 'ulist', 30)
