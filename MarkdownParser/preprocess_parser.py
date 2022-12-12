@@ -1,9 +1,9 @@
 
 
 from .base_class import Parser,Handler
-from typing import List
 import re
-from .block_parser import _container, _counter,HTMLBlock
+from .block_parser import HTMLBlock
+from .base_class import CONTAINER
 
 class PreprocessParser(Parser):
 
@@ -61,13 +61,10 @@ class HTMLLabelHandler(Handler):
 
         
         def subFunc(match):
-            global _counter,_container
+            global CONTAINER
             src = match.group(0)
             block = HTMLBlock(word = src)
-            name = f'{block.__class__.__name__}-{str(_counter)}'
-            _container[name] = block
-            _counter += 1
-            return '{-%' + name + '%-}'
+            return CONTAINER.register(block)
         
         text = re.sub(self.RE,subFunc,text)
         text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行

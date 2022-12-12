@@ -1,5 +1,5 @@
 
-from .base_class import Parser,Handler,Block,_container,_counter
+from .base_class import Parser,Handler,Block,CONTAINER
 from typing import List
 import re
 
@@ -67,6 +67,37 @@ class EmptyBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
+class EscapeCharacterHandler(Handler):
+    # 处理所有转义字符\以及其后面的一个字符
+    
+    def __init__(self, parser=None) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r'\\(.)')
+
+    def subFunc(self,match:re.Match):
+        character = match.group(1)
+        pic_block = EscapeCharacterBlock(word=character)
+        replace_name = self.block.register(pic_block) # 注册并替换名字
+        return replace_name
+        
+    def __call__(self, root: Block, text: str):
+        
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text       
+        new_text = re.sub(self.RE,self.subFunc,text)
+        
+        self.parser.match(self.block,new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block.sub_blocks[0].input['text'] = text
+            self.block = self.block.sub_blocks[0]
+            
+        root.addBlock(self.block)
+
+class EscapeCharacterBlock(Block):
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
 
 class ExtensionBlockHandler(Handler):
     # 自定义扩展
@@ -299,12 +330,12 @@ class PictureHandler(Handler):
     
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'(?<!\\)!\[([^\!\[\]]*?)\]\((.*?)\)')
+        self.RE = re.compile(r'!\[([^\!\[\]]*?)\]\((.*?)\)')
         
     def subFunc(self,match:re.Match):
         word = match.group(1)
         url = match.group(2)
-        pic_block = PictureBlock(word=word,url=url)
+        pic_block = PictureBlock(word=word,url=url,text=match.group())
         replace_name = self.block.register(pic_block) # 注册并替换名字
         return replace_name
 
@@ -336,9 +367,9 @@ class ReferenceHandler(Handler):
         super().__init__(parser)
         # 匹配嵌套 + 忽略末尾多余 )
         
-        # Typora               r'(?<!\\)\[([^\[\]]*?)\]\((.*?)\)'
+        # Typora               r'\[([^\[\]]*?)\]\((.*?)\)'
         # Markdown All in One  ...
-        self.RE = re.compile(r"""(?<!\\)(
+        self.RE = re.compile(r"""(
             \[([^\[\]]*?)\]\((.*?)\)|
             <((?:[a-zA-z@:\.\/])+?)>
         )""",re.VERBOSE)  
@@ -379,7 +410,7 @@ class SpecialTextHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r"""(?<!\\)(
+        self.RE = re.compile(r"""(
             \*{3}(.+?)\*{3}|                           # 粗体+斜体
             \*{2}_(.+?)_\*{2}|                         # 粗体+斜体
             \*{2}(.+?)\*{2}|                           # 粗体
@@ -470,7 +501,7 @@ class TextHandler(Handler):
     
     def __call__(self, root: Block, text: str):
         
-        global _container
+        global CONTAINER
         RE = re.compile(r'({-%.*?%-})')
         split_strings = RE.split(text)
 
@@ -483,10 +514,12 @@ class TextHandler(Handler):
             else:
                 id = string[3:-3]
                 try:
-                    class_object:Block = _container[id]
+                    class_object:Block = CONTAINER[id]
                     class_object.restore(TextBlock)
                     root.addBlock(class_object)
                 except:
+                    # print(id)
+                    # print(CONTAINER)
                     # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
                     # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
                     # 所以做一个try exception,这种情况当成文字处理
@@ -503,7 +536,8 @@ def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 'empty', 100)
-    block_parser.register(ExtensionBlockHandler(block_parser), 'extension', 99)
+    block_parser.register(EscapeCharacterHandler(block_parser), 'escape', 99)
+    block_parser.register(ExtensionBlockHandler(block_parser), 'extension', 98)
     block_parser.register(SplitBlockHandler(block_parser), 'split', 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 'indent', 90)
     block_parser.register(CodeBlockHandler(block_parser), 'code', 80)

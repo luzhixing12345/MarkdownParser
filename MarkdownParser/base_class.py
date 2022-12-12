@@ -1,13 +1,40 @@
 
 import re
-from typing import List,Dict
 
+class Container:
+    # 用于记录全局解析时的中间变量替换
+    
+    def __init__(self) -> None:
+        self._container = {
+            # block类名-唯一标识符 : block类对象
+            # 
+        }
+        
+        self._counter = 0
+        self.__str__ == self.__repr__
 
-_container = {
-    # block类名-唯一标识符 : block类对象    
-} # 保存类对象
-
-_counter = 0
+    def __repr__(self) -> str:
+        
+        split_line = '-' * 50 + '\n'
+        info = f'Total number: {self._counter}\n\n'
+        
+        for k,v in self._container.items():
+            info += f'[{k}]'.ljust(30)
+            if v.input.get('word') != None:
+                info += f' < word = ' + v.input['word'] + ' >'
+            info += '\n'
+        return split_line + info + split_line
+        
+    def __getitem__(self,key):
+        return self._container[key]
+    
+    def register(self, class_object):
+        _name = f'{class_object.__class__.__name__}-{str(self._counter)}'
+        self._counter += 1
+        self._container[_name] = class_object
+        return '{-%' + _name + '%-}'
+        
+CONTAINER = Container()
 
 
 class Parser:
@@ -53,25 +80,19 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        # self._text = self.input.get('text',None) # 输入的纯文本格式,用于恢复code block中代码
+        # 输入的纯文本格式,用于恢复code block中代码
         # self._word = self.input.get('word',None) # 输入的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__
     
     def register(self, class_object):
         
-        global _counter, _container
-        _name = f'{class_object.__class__.__name__}-{str(_counter)}'
-        # print("register name = ",_name)
-        _counter += 1
-        
-        _container[_name] = class_object
-        
-        return '{-%' + _name + '%-}'
+        global CONTAINER
+        return CONTAINER.register(class_object)
 
     def restore(self, TextBlock):
         # 这里传入 TextBlock 是因为 TextBlock 还未定义
-        global _container
+        global CONTAINER
         RE = re.compile(r'({-%.*?%-})')
         split_strings = RE.split(self.input['word'])
 
@@ -83,7 +104,7 @@ class Block:
                     self.addBlock(TextBlock(word=string))
             else:
                 id = string[3:-3]
-                class_object:Block = _container[id]
+                class_object:Block = CONTAINER[id]
                 class_object.restore(TextBlock)
                 self.addBlock(class_object)
             count += 1
