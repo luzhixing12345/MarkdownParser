@@ -1,7 +1,7 @@
 
 import re
 from .base_class import Parser, Optimizer, Block
-from .block_parser import TableBlock
+from .block_parser import TableBlock, buildBlockParser, TextBlock
 
 class TreeParser(Parser):
     
@@ -11,8 +11,7 @@ class TreeParser(Parser):
     def __call__(self, root:Block):
 
         self.checkBlock(root)
-        root.info()
-        ...
+        print(root.printInfo())
 
     def checkBlock(self, block:Block):
         # 深度优先的遍历root的所有节点,
@@ -26,7 +25,6 @@ class TreeParser(Parser):
         else:
             for sub_block in block.sub_blocks:
                 self.checkBlock(sub_block)
-
 
 
 class CodeBlockOptimizer(Optimizer):
@@ -100,8 +98,9 @@ class TableBlockOptimizer(Optimizer):
     def __init__(self) -> None:
         super().__init__()
         self.RE = re.compile(r'(?<!\\)\|')
+        self.block_parser = buildBlockParser() # 初始化一个block parser 用于解析表格中出现的每一个表项
         # 匹配的
-        self.target_block_names = ['TableBlock']
+        self.table_block_names = ['TableBlock']
         
         # 表格匹配,其余中断
         self.header_block_names = ['TextBlock','ComplexBlock']
@@ -112,7 +111,7 @@ class TableBlockOptimizer(Optimizer):
         # 匹配返回一个TableBlock对象实例,用于后续补充表格
         # 不匹配返回None
         table_length = len(table_block.input['alignments'])
-        header_text = header_block.input['text']
+        header_text = header_block.input['text'] # 获取原文
         
         header = self.RE.split(header_text)
         if len(header)-2 != table_length:
@@ -120,21 +119,41 @@ class TableBlockOptimizer(Optimizer):
         
         # 匹配,创建实例
         header = header[1:-1]
-        new_table_block = TableBlock(header=header,alignments=table_block.input['alignments'])
+        for i in range(len(header)):
+            header[i] = header[i].strip()
+        # 重新解析每一个table的表项
+        table_header_node = self.block_parser(header)
+        
+        header_info = [i.input['word'] for i in table_header_node.sub_blocks]
+        table_header_node.input['ifno'] = header_info
+        new_table_block = TableBlock(
+            header=table_header_node,
+            alignments=table_block.input['alignments'],
+            length=len(header)
+        )
         return new_table_block
 
-    def _addTableItem(self,table_block: TableBlock, item_block:Block):
+    def _addTableItem(self,table_block: TableBlock, table_item_block:Block):
         # 添加表格项,多去少补
-        items = self.RE.split(item_block.input['text'])
-        if not items[0]:
-            items.pop(0)
-        if not items[-1]:
-            items.pop()
-        table_length = len(table_block.input['header'])
-        if len(items) > table_length:
-            items = items[:table_length]
+        table_items = self.RE.split(table_item_block.input['text'])
+        if not table_items[0]:
+            table_items.pop(0)
+        if not table_items[-1]:
+            table_items.pop()
+        table_length = table_block.input['length']
+        if len(table_items) > table_length:
+            table_items = table_items[:table_length]
         else:
-            items.extend([' ' for _ in range(table_length-len(items))])
+            table_items.extend([' ' for _ in range(table_length-len(table_items))])
+        for i in range(len(table_items)):
+            table_items[i] = table_items[i].strip()
+        
+        table_item_node = self.block_parser(table_items)
+        for i in range(len(table_item_node.sub_blocks)):
+            if table_item_node.sub_blocks[i].__class__.__name__ == 'EmptyBlock':
+                table_item_node.sub_blocks[i] = TextBlock(text=' ',word='')
+        table_block._addTableItem(table_item_node)
+        # table_item_node.info()
         
     def __call__(self, root: Block):
 
@@ -157,21 +176,27 @@ class TableBlockOptimizer(Optimizer):
                 else:
                     self._addTableItem(table_block,block)
                     continue
-            # 开头不可以
-            if block.block_name in self.target_block_names and i!=0:
+            # 尝试匹配 TableBlock, 开头不可以
+            if block.block_name in self.table_block_names and i!=0:
                 # 第一步匹配
                 if root.sub_blocks[i-1].block_name in self.header_block_names:
                     # 第二步匹配
                     table_block = self._matchSize(root.sub_blocks[i-1],block)
-                    if table_block:
+                    if table_block is not None:
                         match_table = True
                         new_sub_blocks.pop()
+                        self.is_match = True
                         continue
                     else:
                         match_table = False
 
             # 几个else情况
             new_sub_blocks.append(block)
+        
+        if table_block is not None:
+            new_sub_blocks.append(table_block)
+        root.sub_blocks = new_sub_blocks
+        return self.is_match
 
 class OUListOptimizer(Optimizer):
     
@@ -229,9 +254,9 @@ class ParagraphBlockOptimizer(Optimizer):
 def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
-    tree_parser.register(CodeBlockOptimizer(),'code block optimize',100)
-    tree_parser.register(HashHeaderBlockOptimizer(),'hash optimize',80)
-    tree_parser.register(TableBlockOptimizer(),'table optimize',70)
+    tree_parser.register(CodeBlockOptimizer(),100)
+    tree_parser.register(HashHeaderBlockOptimizer(),80)
+    tree_parser.register(TableBlockOptimizer(),70)
     # tree_parser.register(OUListOptimizer(),'O list and U list optimize',90)
     # tree_parser.register(ParagraphBlockOptimizer(),'paragraph optimize',80)
     return tree_parser

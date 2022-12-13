@@ -65,10 +65,9 @@ class Parser:
             priority = method['priority']
             print(f'[{name}]({priority}) : {class_name}')
     
-    def register(self, class_object:object, name:str, priority:int=0) -> None:
+    def register(self, class_object:object, priority:int=0) -> None:
         
         new_method = {
-            'name'    : name,
             'priority': priority,
             'object'  : class_object
         }
@@ -84,6 +83,7 @@ class Block:
         # self._word = self.input.get('word',None) # 输入的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__
+        self.__repr__ = self.__str__
     
     def register(self, class_object):
         
@@ -117,7 +117,6 @@ class Block:
         
         if not self.input:
             return ''
-        
         output = '< '
         for k,v in self.input.items():
             if k == 'text':
@@ -129,7 +128,8 @@ class Block:
             output = output[:-3] + ' >'
         return output
 
-    def info(self, deep: int=0, brief: bool=False):
+    def info(self, deep: int=0):
+        # root.info()
         # 递归输出信息
         
         if self.sub_blocks == []:
@@ -137,11 +137,21 @@ class Block:
         else:
             for block in self.sub_blocks:
                 print(' '*4*deep,end='')
-                if brief:
-                    print(f'[{block.__class__.__name__}]')
-                else:
-                    print(f'[{block.__class__.__name__}] {str(block)}')
-                block.info(deep+1, brief)
+                print(f'[{block.__class__.__name__}] {str(block)}')
+                block.info(deep+1)
+                
+    def printInfo(self, deep: int=0) -> str:
+        # print(root.printInfo())
+        # 递归输出信息
+        output_str = ''
+        if self.sub_blocks == []:
+            return output_str
+        else:
+            for block in self.sub_blocks:
+                output_str += ' '*4*deep
+                output_str += f'[{block.__class__.__name__}] {str(block)}\n'
+                output_str += block.printInfo(deep+1)
+            return output_str
       
                     
 class Handler:

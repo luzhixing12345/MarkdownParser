@@ -25,12 +25,9 @@ class Markdown:
         
         # 逐行解析,得到一颗未优化的树
         root = self.block_parser(lines)
-        root.info()
-        from .base_class import CONTAINER
-        print(CONTAINER)
-        # 优化,得到正确的markdown解析树
-        # tree = self.tree_parser(root)
         
+        # 优化,得到正确的markdown解析树
+        tree = self.tree_parser(root)
         # # 输出到屏幕 / 导出html文件
         # self.export_processor(tree)
 

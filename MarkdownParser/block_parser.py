@@ -9,11 +9,14 @@ class BlockParser(Parser):
 
     def __init__(self) -> None:
         super().__init__()
+        self.is_sorted = False
         
     def __call__(self, lines: List[str]):
 
         self.root = Block()
-        self._sort()
+        if not self.is_sorted:
+            self._sort()
+            self.is_sorted = True
 
         for text in lines:
             self.match(self.root, text)
@@ -469,8 +472,7 @@ class TableHandler(Handler):
     
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^\|(?: *:?-{1,}:? *\|)+')
-        
+        self.RE = re.compile(r'^\|(?: *:?-{1,}:? *\|)+') # 判断表格出现
 
     def __call__(self, root: Block, text: str):
         # 判断对齐方式
@@ -489,6 +491,15 @@ class TableBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        # self.input['header'] 表格头节点
+        # self.input['alignments'] 表格对齐方式
+        # self.input['length'] 表格列数
+        # self.input['table_items'] 每一行的表格项(Block)
+                
+    def _addTableItem(self,block: Block):
+        # 将一个table表项添加到Block中
+        self.sub_blocks.extend(block.sub_blocks)
+    
 
 class TextHandler(Handler):
     # 处理常规文本
@@ -535,20 +546,20 @@ class TextBlock(Block):
 def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
-    block_parser.register(EmptyBlockHandler(block_parser), 'empty', 100)
-    block_parser.register(EscapeCharacterHandler(block_parser), 'escape', 99)
-    block_parser.register(ExtensionBlockHandler(block_parser), 'extension', 98)
-    block_parser.register(SplitBlockHandler(block_parser), 'split', 95)
-    block_parser.register(HierarchyIndentHandler(block_parser), 'indent', 90)
-    block_parser.register(CodeBlockHandler(block_parser), 'code', 80)
-    block_parser.register(HashHeaderHandler(block_parser), 'hashheader', 70)
-    block_parser.register(TaskListHandler(block_parser), 'tlist', 50)
-    block_parser.register(OListHandler(block_parser), 'olist', 40)
-    block_parser.register(UListHandler(block_parser), 'ulist', 30)
-    block_parser.register(QuoteHandler(block_parser), 'quote', 20)
-    block_parser.register(PictureHandler(block_parser), 'picture', 15)
-    block_parser.register(ReferenceHandler(block_parser), 'reference', 10)
-    block_parser.register(SpecialTextHandler(block_parser), 'specialtext', 5)
-    block_parser.register(TableHandler(block_parser), 'specialtext', 4)
-    block_parser.register(TextHandler(block_parser), 'text', 0)
+    block_parser.register(EmptyBlockHandler(block_parser), 100)
+    block_parser.register(EscapeCharacterHandler(block_parser), 99)
+    block_parser.register(ExtensionBlockHandler(block_parser), 98)
+    block_parser.register(SplitBlockHandler(block_parser), 95)
+    block_parser.register(HierarchyIndentHandler(block_parser), 90)
+    block_parser.register(CodeBlockHandler(block_parser), 80)
+    block_parser.register(HashHeaderHandler(block_parser), 70)
+    block_parser.register(TaskListHandler(block_parser), 50)
+    block_parser.register(OListHandler(block_parser), 40)
+    block_parser.register(UListHandler(block_parser), 30)
+    block_parser.register(QuoteHandler(block_parser), 20)
+    block_parser.register(PictureHandler(block_parser), 15)
+    block_parser.register(ReferenceHandler(block_parser), 10)
+    block_parser.register(SpecialTextHandler(block_parser), 5)
+    block_parser.register(TableHandler(block_parser), 4)
+    block_parser.register(TextHandler(block_parser), 0)
     return block_parser
