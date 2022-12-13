@@ -1,4 +1,5 @@
 
+
 - asdjkl
 
   asjdkl
@@ -8,12 +9,6 @@
   ```cpp
   x = a+b
   ```
-
-  - 123
-  - asd
-
-    ddd
-
-  oooo
+ 123
 
 - aaa

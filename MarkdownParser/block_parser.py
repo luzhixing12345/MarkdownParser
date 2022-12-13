@@ -165,7 +165,7 @@ class HierarchyIndentHandler(Handler):
     
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^([ ]{1,})(.*)')
+        self.RE = re.compile(r'^([ ]{2,})(.*)')
         
     def __call__(self, root: Block, text: str):
 
@@ -197,12 +197,13 @@ class CodeBlockHandler(Handler):
         
         match_group = re.match(self.RE,text)
         language = match_group.group(1).strip()
+        
         if language:
             # 代码段开头
-            root.addBlock(CodeBlock(language=language,text=text,type='start'))
+            root.addBlock(CodeBlock(language=language,text=text))
         else:
             # 代码段结尾
-            root.addBlock(CodeBlock(text=text,type='end'))
+            root.addBlock(CodeBlock(language='?',text=text))
         
 class CodeBlock(Block):
     
@@ -514,7 +515,7 @@ class TextHandler(Handler):
         
         global CONTAINER
         RE = re.compile(r'({-%.*?%-})')
-        split_strings = RE.split(text)
+        split_strings = RE.split(text.strip())
 
         count = 0
         for string in split_strings:
