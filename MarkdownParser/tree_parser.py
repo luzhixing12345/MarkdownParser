@@ -101,7 +101,8 @@ class HierarchyEliminate(Optimizer):
         
     def __call__(self, root: Block):
 
-        # depth 属性用于表示当前节点的深度
+        # 当前节点的所需的对齐空格长度
+        # 如果没有该属性则说明不需要考虑层次缩进的情况
         root_align_space_number = root.input.get('align_space_number',None)
         if root_align_space_number is None:
             return
@@ -114,7 +115,7 @@ class HierarchyEliminate(Optimizer):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
                 # 对齐长度从根节点依次传递下去
-                block.input['align_space_number'] = root_align_space_number + block.input['align_space_number']
+                block.input['align_space_number'] += root_align_space_number
                 # 切换
                 if deeper_indent:
                     new_sub_blocks.append(activite_block)
@@ -133,18 +134,27 @@ class HierarchyEliminate(Optimizer):
                     # 刚好满足缩进,直接展开
                     if left_space_number == 0:
                         activite_block.sub_blocks.extend(block.sub_blocks)
+                    # 空格数多余缩进所需,归入activite_block节点放到下层处理
                     elif left_space_number > 0:
                         activite_block.addBlock(block)
+                    # 空格数少于缩进所需, 归并到根节点
+                    else:
+                        if activite_block is not None:
+                            new_sub_blocks.append(activite_block)
+                            activite_block = None
+                            deeper_indent = False
+                        new_sub_blocks.extend(block.sub_blocks)
                 # 递进级层次缩进被打断
                 else:
-                    pass
                     new_sub_blocks.extend(block.sub_blocks)
             else:
                 # EmptyBlock 先补齐在 UList OListBlock 下
                 if block.block_name == 'EmptyBlock':
                     if deeper_indent:
+                        if len(activite_block.sub_blocks) == 0:
+                            activite_block.addBlock(block)
                         # 忽略连续的EmptyBlock
-                        if activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
+                        elif activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
                             activite_block.addBlock(block)
                     else:
                         if len(new_sub_blocks) > 1 and new_sub_blocks[-1].block_name == 'EmptyBlock':
@@ -152,6 +162,10 @@ class HierarchyEliminate(Optimizer):
                         else:
                             new_sub_blocks.append(block)
                 else:
+                    if activite_block is not None:
+                        new_sub_blocks.append(activite_block)
+                        activite_block = None
+                        deeper_indent = False
                     new_sub_blocks.append(block)
                         
         if activite_block is not None:
