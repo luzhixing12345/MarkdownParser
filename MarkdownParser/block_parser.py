@@ -48,11 +48,6 @@ class HTMLBlock(Block):
     def __str__(self):
         return '<html>'
     
-class ParaphgraphBlock(Block):
-    # 在本阶段不使用,在优化阶段使用
-    def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)
-
 class EmptyBlockHandler(Handler):
     # 处理空行
     

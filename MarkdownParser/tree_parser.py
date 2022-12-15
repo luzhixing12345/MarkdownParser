@@ -160,7 +160,7 @@ class TableBlockOptimizer(Optimizer):
         self.header_block_names = ['TextBlock','ComplexBlock']
         self.body_block_names = ['TextBlock','ComplexBlock','TableBlock']
         
-    def _matchSize(self,header_block:Block, table_block:Block):
+    def _createTableBlock(self,header_block:Block, table_block:Block):
         # 判断header和table列是否匹配
         # 匹配返回一个TableBlock对象实例,用于后续补充表格
         # 不匹配返回None
@@ -235,7 +235,7 @@ class TableBlockOptimizer(Optimizer):
                 # 第一步匹配
                 if root.sub_blocks[i-1].block_name in self.header_block_names:
                     # 第二步匹配
-                    table_block = self._matchSize(root.sub_blocks[i-1],block)
+                    table_block = self._createTableBlock(root.sub_blocks[i-1],block)
                     if table_block is not None:
                         match_table = True
                         # 把上一项header的TextBlock那一项退出来,已经整合到table_block中了
@@ -275,48 +275,6 @@ class UListOptimizer(Optimizer):
             else:
                 new_sub_blocks.append(block)
 
-class ParagraphBlockOptimizer(Optimizer):
-    
-    # 1. 合并连续的TextBlock
-    # 2. 删除多行空行
-    # 3. 将上述 Blocks 整合到 ParagraphBlock中    
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.target_block_names = ['TextBlock','ReferenceBlock','SpecialBlock','PictureBlock','ComplexBlock']
-    
-    def __call__(self, root: Block):
-                
-        paraphgraph_block = None
-        new_sub_blocks = []
-        
-        for i in range(len(root.sub_blocks)):
-            block : Block = root.sub_blocks[i]
-            if block.block_name in self.target_block_names:
-                if paraphgraph_block:
-                    # 再次遇到
-                    activite_Block.input['word'] += ' ' + block.input['word']
-                    # print(first_TextBlock._word)
-                else:
-                    # 第一次遇到
-                    meet = True
-                    activite_Block = block
-            else:
-                if meet:
-                    new_sub_blocks.append(activite_Block)
-                new_sub_blocks.append(block)
-                meet = False
-                activite_Block = None
-        # 处理一下最后一个
-        if meet:
-            new_sub_blocks.append(activite_Block)
-                
-        root.sub_blocks = new_sub_blocks
-
-        return self.is_match
-
-
-
 
 def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
@@ -326,5 +284,4 @@ def buildTreeParser():
     tree_parser.register(HashHeaderBlockOptimizer(),80)
     tree_parser.register(TableBlockOptimizer(),70)
     # tree_parser.register(UListOptimizer(),60)
-    # tree_parser.register(ParagraphBlockOptimizer(),'paragraph optimize',80)
     return tree_parser
