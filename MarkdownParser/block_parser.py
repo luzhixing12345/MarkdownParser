@@ -265,14 +265,16 @@ class OListHandler(Handler):
     
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^\d+\. (.*)')
+        self.RE = re.compile(r'^(\d+)\. (.*)')
 
     def __call__(self, root: Block, text: str):
         
         match_group = re.match(self.RE,text)
-        word = match_group.group(1)
+        serial_number = match_group.group(1)
+        align_space_number = len(serial_number) + 2
+        word = match_group.group(2)
         
-        block = OListBlock(word=word,text=text)
+        block = OListBlock(serial_number=serial_number,align_space_number=align_space_number,word=word,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -292,8 +294,9 @@ class UListHandler(Handler):
 
         match_group = re.match(self.RE,text)
         word = match_group.group(1)
+        align_space_number = 2
         
-        block = UListBlock(word=word,text=text)
+        block = UListBlock(word=word,align_space_number=align_space_number,text=text)
         self.parser.match(block,word)
         root.addBlock(block)
 

@@ -9,16 +9,17 @@ class TreeParser(Parser):
         super().__init__()
 
     def __call__(self, root:Block):
-
+        
+        root.input['align_space_number'] = 0 # 用于 HierarchyEliminate 阶段的对齐空格调整
+        
         self.checkBlock(root)
-        print(root.printInfo())
+        return root
 
     def checkBlock(self, block:Block):
         # 深度优先的遍历root的所有节点,
         # 如果遇到相应的可优化项则将节点交由对应的优化器处理
         for optimizer in self._handlers:
-            if optimizer['object'](block):
-                break
+            optimizer['object'](block)
             
         if block.sub_blocks == []:
             return
@@ -26,12 +27,11 @@ class TreeParser(Parser):
             for sub_block in block.sub_blocks:
                 self.checkBlock(sub_block)
 
-class HierarchyIndentOptimizer(Optimizer):
-    # 合并相同层级
+class HierarchyMerge(Optimizer):
+    # 合并相同层级(space_number)
     
     def __init__(self) -> None:
         super().__init__()
-        # EmptyBlock的处理相当于任意的space_number的HierarchyBlock
         self.target_block_names = ['HierarchyBlock','EmptyBlock']
         
     def __call__(self, root: Block):
@@ -48,30 +48,29 @@ class HierarchyIndentOptimizer(Optimizer):
                 
                 # first meet
                 if activite_block is None:
-                    activite_block = block
                     activite_space_number = block.input.get('space_number',-1)
-                else:
-                    current_space_number = block.input.get('space_number',-1)                       
+                    # 未在匹配状态的EmptyBlock不算入
                     if activite_space_number == -1:
-                        # 多个连续EmptyBlock, 不处理后续的EmptyBlock
-                        if current_space_number == -1:
-                            continue
-                        else:
-                            # 修正为遇到的第一个HierarchyBlock的space_number
-                            activite_space_number = current_space_number
-                            activite_block = block
-                        
+                        new_sub_blocks.append(block)
                     else:
-                        # 多个连续EmptyBlock, 不处理后续的EmptyBlock
-                        if current_space_number == -1 and activite_block.sub_blocks[-1].block_name == 'EmptyBlock':
+                        activite_block = block
+                else:
+                    current_space_number = block.input.get('space_number',-1)
+                    
+                    # 不处理连续的EmptyBlock
+                    if current_space_number == -1:
+                        if activite_block.sub_blocks[-1].block_name == 'EmptyBlock':
                             continue
-                        if current_space_number == activite_space_number or current_space_number == -1:
-                            activite_block.sub_blocks.extend(block.sub_blocks)
                         else:
-                            # 层次缩进改变
-                            new_sub_blocks.append(activite_block)
-                            activite_block = block
-                            activite_space_number = current_space_number
+                            activite_block.sub_blocks.append(block)
+                    # 层次相同,合并
+                    elif current_space_number == activite_space_number:
+                        activite_block.sub_blocks.extend(block.sub_blocks)
+                    else:
+                        # 层次缩进改变
+                        new_sub_blocks.append(activite_block)
+                        activite_block = block
+                        activite_space_number = current_space_number
             else:
                 if activite_block is not None:
                     new_sub_blocks.append(activite_block)
@@ -82,11 +81,86 @@ class HierarchyIndentOptimizer(Optimizer):
             new_sub_blocks.append(activite_block)
         
         root.sub_blocks = new_sub_blocks
-        return self.is_match
 
+
+class HierarchyEliminate(Optimizer):
+    # 消除多余EmptyBlock
+    # 消除Hierarchy标签,调整UList OList对齐关系
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_block_names = ['UListBlock','OListBlock']
+        
+        self.interrupt_block_names = ['CodeBlock','HashHeaderBlock','TableBlock','QuoteBlock','SplitBlock']
+        # 递进级层次缩进被打断
+        # 例子:
+        #
+        # - 123
+        # # abc
+        #   - aaa
+        
+    def __call__(self, root: Block):
+
+        # depth 属性用于表示当前节点的深度
+        root_align_space_number = root.input.get('align_space_number',None)
+        if root_align_space_number is None:
+            return
+
+        new_sub_blocks = []
+        activite_block = None
+        deeper_indent = False
+
+        for i in range(len(root.sub_blocks)):
+            block: Block = root.sub_blocks[i]
+            if block.block_name in self.target_block_names:
+                # 对齐长度从根节点依次传递下去
+                block.input['align_space_number'] = root_align_space_number + block.input['align_space_number']
+                # 切换
+                if deeper_indent:
+                    new_sub_blocks.append(activite_block)
+                deeper_indent = True
+                activite_block = block
+            elif block.block_name in self.interrupt_block_names:
+                deeper_indent = False
+                if activite_block is not None:
+                    new_sub_blocks.append(activite_block)
+                    activite_block = None
+                new_sub_blocks.append(block)
+
+            elif block.block_name == 'HierarchyBlock':
+                if deeper_indent:
+                    left_space_number = block.input['space_number'] - activite_block.input['align_space_number']
+                    # 刚好满足缩进,直接展开
+                    if left_space_number == 0:
+                        activite_block.sub_blocks.extend(block.sub_blocks)
+                    elif left_space_number > 0:
+                        activite_block.addBlock(block)
+                # 递进级层次缩进被打断
+                else:
+                    pass
+                    new_sub_blocks.extend(block.sub_blocks)
+            else:
+                # EmptyBlock 先补齐在 UList OListBlock 下
+                if block.block_name == 'EmptyBlock':
+                    if deeper_indent:
+                        # 忽略连续的EmptyBlock
+                        if activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
+                            activite_block.addBlock(block)
+                    else:
+                        if len(new_sub_blocks) > 1 and new_sub_blocks[-1].block_name == 'EmptyBlock':
+                            continue
+                        else:
+                            new_sub_blocks.append(block)
+                else:
+                    new_sub_blocks.append(block)
+                        
+        if activite_block is not None:
+            new_sub_blocks.append(activite_block)
+                        
+        root.sub_blocks = new_sub_blocks
 
 class CodeBlockOptimizer(Optimizer):
-    # 将代码段start-end之间的代码恢复为纯文本并保存在input['code']
+    # 将代码段之间的代码恢复为纯文本并保存在input['code']
 
     def __init__(self) -> None:
         super().__init__()
@@ -111,7 +185,6 @@ class CodeBlockOptimizer(Optimizer):
                     activite_CodeBlock = None
                     continue
                 activite_CodeBlock.input['code'] += block.input['text'] + '\n'
-                self.is_match = True
             else:
                 if block.block_name in self.target_block_names:
                     restore_text = True
@@ -125,7 +198,6 @@ class CodeBlockOptimizer(Optimizer):
             new_sub_blocks.append(activite_CodeBlock)
                           
         root.sub_blocks = new_sub_blocks
-        return self.is_match
             
 class HashHeaderBlockOptimizer(Optimizer):
     
@@ -143,9 +215,7 @@ class HashHeaderBlockOptimizer(Optimizer):
                 # 以便后续使用ParagraphBlock处理所有剩余的ComplexBlock
                 if block.sub_blocks[0].block_name == 'ComplexBlock':
                     block.sub_blocks = block.sub_blocks[0].sub_blocks
-                    self.is_match = True
-        
-        return self.is_match
+
 
 class TableBlockOptimizer(Optimizer):
     
@@ -240,7 +310,6 @@ class TableBlockOptimizer(Optimizer):
                         match_table = True
                         # 把上一项header的TextBlock那一项退出来,已经整合到table_block中了
                         new_sub_blocks.pop()
-                        self.is_match = True
                         continue
                     else:
                         match_table = False
@@ -251,7 +320,6 @@ class TableBlockOptimizer(Optimizer):
         if table_block is not None:
             new_sub_blocks.append(table_block)
         root.sub_blocks = new_sub_blocks
-        return self.is_match
 
 class UListOptimizer(Optimizer):
     # 将连续的 Olist / Ulist 合并起来
@@ -279,8 +347,9 @@ class UListOptimizer(Optimizer):
 def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
-    tree_parser.register(HierarchyIndentOptimizer(),100)
+    tree_parser.register(HierarchyMerge(),100)
     tree_parser.register(CodeBlockOptimizer(),90)
+    tree_parser.register(HierarchyEliminate(),85)
     tree_parser.register(HashHeaderBlockOptimizer(),80)
     tree_parser.register(TableBlockOptimizer(),70)
     # tree_parser.register(UListOptimizer(),60)

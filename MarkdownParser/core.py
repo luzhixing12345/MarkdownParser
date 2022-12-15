@@ -28,6 +28,7 @@ class Markdown:
         
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
+        tree.info()
         # # 输出到屏幕 / 导出html文件
         # self.export_processor(tree)
 
