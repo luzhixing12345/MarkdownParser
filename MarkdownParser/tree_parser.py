@@ -82,6 +82,45 @@ class HierarchyMerge(Optimizer):
         
         root.sub_blocks = new_sub_blocks
 
+class CodeBlockOptimizer(Optimizer):
+    # 将代码段之间的代码恢复为纯文本并保存在input['code']
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_block_names = ['CodeBlock']
+        
+    def __call__(self, root: Block):
+        
+        activite_CodeBlock = None
+        restore_text = False
+        new_sub_blocks = []
+        
+        for i in range(len(root.sub_blocks)):
+            
+            block : Block = root.sub_blocks[i]
+            # 开始恢复纯文本
+            if restore_text:
+                # 再一次遇到代码段标志,意味着结束
+                if block.block_name in self.target_block_names:
+                    restore_text = False
+                    activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1] # 去掉结尾换行符
+                    new_sub_blocks.append(activite_CodeBlock)
+                    activite_CodeBlock = None
+                    continue
+                activite_CodeBlock.input['code'] += block.input['text'] + '\n'
+            else:
+                if block.block_name in self.target_block_names:
+                    restore_text = True
+                    activite_CodeBlock = block
+                else:
+                    new_sub_blocks.append(block)
+        
+        # 代码段不匹配,一直到结尾全部恢复为文本
+        if activite_CodeBlock is not None:
+            activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1] # 去掉结尾换行符
+            new_sub_blocks.append(activite_CodeBlock)
+                          
+        root.sub_blocks = new_sub_blocks
 
 class HierarchyEliminate(Optimizer):
     # 消除多余EmptyBlock
@@ -173,63 +212,71 @@ class HierarchyEliminate(Optimizer):
                         
         root.sub_blocks = new_sub_blocks
 
-class CodeBlockOptimizer(Optimizer):
-    # 将代码段之间的代码恢复为纯文本并保存在input['code']
-
-    def __init__(self) -> None:
-        super().__init__()
-        self.target_block_names = ['CodeBlock']
-        
-    def __call__(self, root: Block):
-        
-        activite_CodeBlock = None
-        restore_text = False
-        new_sub_blocks = []
-        
-        for i in range(len(root.sub_blocks)):
-            
-            block : Block = root.sub_blocks[i]
-            # 开始恢复纯文本
-            if restore_text:
-                # 再一次遇到代码段标志,意味着结束
-                if block.block_name in self.target_block_names:
-                    restore_text = False
-                    activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1] # 去掉结尾换行符
-                    new_sub_blocks.append(activite_CodeBlock)
-                    activite_CodeBlock = None
-                    continue
-                activite_CodeBlock.input['code'] += block.input['text'] + '\n'
-            else:
-                if block.block_name in self.target_block_names:
-                    restore_text = True
-                    activite_CodeBlock = block
-                else:
-                    new_sub_blocks.append(block)
-        
-        # 代码段不匹配,一直到结尾全部恢复为文本
-        if activite_CodeBlock is not None:
-            activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1] # 去掉结尾换行符
-            new_sub_blocks.append(activite_CodeBlock)
-                          
-        root.sub_blocks = new_sub_blocks
-            
-class HashHeaderBlockOptimizer(Optimizer):
+class OListSerialOptimizer(Optimizer):
+    # 优化 Olist 序号顺序
     
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['HashHeaderBlock']
+        self.target_block_names = ['OListBlock','EmptyBlock']
         
     def __call__(self, root: Block):
 
-        for block in root.sub_blocks:
+        new_sub_blocks = []
+        first_number = None
+        
+        for i in range(len(root.sub_blocks)):
+            block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
-                # HashBlock 有且仅有一个sub, sub_blocks[0]
-                # 如果是复杂文本则将ComplexBlock.sub_blocks传递给HashBlock
-                # 目的是剔除HashBlock中的ComplexBlock影响
-                # 以便后续使用ParagraphBlock处理所有剩余的ComplexBlock
-                if block.sub_blocks[0].block_name == 'ComplexBlock':
-                    block.sub_blocks = block.sub_blocks[0].sub_blocks
+                if block.block_name == 'EmptyBlock':
+                    continue
+                if first_number is None:
+                    first_number = int(block.input['serial_number'])
+                else:
+                    first_number += 1
+                    block.input['serial_number'] = str(first_number)
+            else:
+                first_number = None
+                new_sub_blocks.append(block)
 
+class ExtensionOptimizer(Optimizer):
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_block_names = ['ExtensionBlock']
+        self.extension_tag = ['note','info','success']
+        
+    def __call__(self, root: Block):
+
+        activite_block = None
+        new_sub_blocks = []
+
+        for i in range(len(root.sub_blocks)):
+            block:Block = root.sub_blocks[i]
+            if block.block_name in self.target_block_names:
+                if block.input['tag'] in self.extension_tag:
+                    if activite_block is None:
+                        activite_block = block
+                    # 不支持嵌套使用, 恢复为纯文本
+                    else:
+                        activite_block.addBlock(TextBlock(text=block.input['text'],word=block.input['text']))
+                elif block.input['tag'] == 'end':
+                    if activite_block is None:
+                        new_sub_blocks.append(TextBlock(text=block.input['text'],word=block.input['text']))
+                    else:
+                        new_sub_blocks.append(activite_block)
+                        activite_block = None
+                else:
+                    raise KeyError("Unknown tag " + block.input['tag'])
+            else:
+                if activite_block is not None:
+                    activite_block.addBlock(block)
+                else:
+                    new_sub_blocks.append(block)
+
+        if activite_block is not None:
+            new_sub_blocks.append(activite_block)
+        
+        root.sub_blocks = new_sub_blocks
 
 class TableBlockOptimizer(Optimizer):
     
@@ -301,7 +348,7 @@ class TableBlockOptimizer(Optimizer):
         # 1. header + table 的BlockName匹配
         # 2. header 和 table 的列个数匹配
         match_table = False
-
+        # root.info()
         for i in range(len(root.sub_blocks)):
             block:Block = root.sub_blocks[i]
             # 进入匹配阶段
@@ -335,28 +382,17 @@ class TableBlockOptimizer(Optimizer):
             new_sub_blocks.append(table_block)
         root.sub_blocks = new_sub_blocks
 
-class UListOptimizer(Optimizer):
-    # 将连续的 Olist / Ulist 合并起来
-    
+class EmptyBlockOptimizer(Optimizer):
+    # 剔除结尾多余的空格
+    # 行中连续的空格已经在
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['EmptyBlock','UListBlock']
-        
+        self.target_block_names = ['EmptyBlock']
+    
     def __call__(self, root: Block):
 
-        new_sub_blocks = []
-        activite_block = None
-        
-        for i in range(len(root.sub_blocks)):
-            block: Block = root.sub_blocks[i]
-            if block.block_name in self.target_block_names:
-                if activite_block is None:
-                    activite_block = block
-                else:
-                    activite_block.sub_blocks.append(block)
-            else:
-                new_sub_blocks.append(block)
-
+        while len(root.sub_blocks) >= 1 and root.sub_blocks[-1].block_name in self.target_block_names:
+            root.sub_blocks.pop()
 
 def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
@@ -364,7 +400,8 @@ def buildTreeParser():
     tree_parser.register(HierarchyMerge(),100)
     tree_parser.register(CodeBlockOptimizer(),90)
     tree_parser.register(HierarchyEliminate(),85)
-    tree_parser.register(HashHeaderBlockOptimizer(),80)
-    tree_parser.register(TableBlockOptimizer(),70)
-    # tree_parser.register(UListOptimizer(),60)
+    tree_parser.register(OListSerialOptimizer(),80)
+    tree_parser.register(ExtensionOptimizer(),70)
+    tree_parser.register(TableBlockOptimizer(),60)
+    tree_parser.register(EmptyBlockOptimizer(),0)
     return tree_parser
