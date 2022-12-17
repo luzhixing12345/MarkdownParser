@@ -3,7 +3,7 @@
 from .preprocess_parser import buildPreprocessParser
 from .block_parser import buildBlockParser
 from .tree_parser import buildTreeParser
-from .export import buildExportProcessor
+from .export_parser import buildExportProcessor
 
 class Markdown:
     def __init__(self) -> None:

@@ -367,21 +367,76 @@ class TableBlockOptimizer(Optimizer):
                 if root.sub_blocks[i-1].block_name in self.header_block_names:
                     # 第二步匹配
                     table_block = self._createTableBlock(root.sub_blocks[i-1],block)
+                    # 匹配成
                     if table_block is not None:
                         match_table = True
                         # 把上一项header的TextBlock那一项退出来,已经整合到table_block中了
                         new_sub_blocks.pop()
-                        continue
                     else:
+                        # 将TableBlock变为纯文本   
+                        new_sub_blocks.append(TextBlock(text=block.input['text'],word=block.input['text']))
                         match_table = False
-
-            # 几个else情况
-            new_sub_blocks.append(block)
+                else:
+                    new_sub_blocks.append(block)
+            else:
+                new_sub_blocks.append(block)
+            
         
         if table_block is not None:
             new_sub_blocks.append(table_block)
         root.sub_blocks = new_sub_blocks
 
+class ParagraphOptimizer(Optimizer):
+    # 将元素使用 ParagraphBlock 包裹起来
+    # 以便创建p标签换行
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_block_names = ['TextBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
+        self.interrupt_block_names = ['ParagraphBlock','HashHeaderBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
+        
+    def __call__(self, root: Block):
+
+        if root.__class__.__name__ in self.interrupt_block_names:
+            return
+        
+        activite_block = None
+        new_sub_blocks = []
+        
+        for i in range(len(root.sub_blocks)):
+            block : Block = root.sub_blocks[i]
+            if block.block_name in self.target_block_names:
+                # 特殊情况,不划入ParagraphBlock
+                if root.__class__.__name__ in ['OListBlock','UListBlock'] and i == 0:
+                    new_sub_blocks.append(block)
+                elif activite_block is None:
+                    activite_block = ParagraphBlock()
+                    activite_block.addBlock(block)
+                else:
+                    activite_block.addBlock(block)
+            else:
+                if activite_block is not None:
+                    new_sub_blocks.append(activite_block)
+                    activite_block = None
+                new_sub_blocks.append(block)
+        
+        if activite_block is not None:
+            new_sub_blocks.append(activite_block)
+        
+        root.sub_blocks = new_sub_blocks
+
+class ParagraphBlock(Block):
+    
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        
+    def toHTML(self):
+
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        return f'<p>{content}</p>'
+        
 class EmptyBlockOptimizer(Optimizer):
     # 剔除结尾多余的空格
     # 行中连续的空格已经在
@@ -403,5 +458,6 @@ def buildTreeParser():
     tree_parser.register(OListSerialOptimizer(),80)
     tree_parser.register(ExtensionOptimizer(),70)
     tree_parser.register(TableBlockOptimizer(),60)
+    tree_parser.register(ParagraphOptimizer(),50)
     tree_parser.register(EmptyBlockOptimizer(),0)
     return tree_parser

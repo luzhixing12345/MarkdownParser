@@ -9,7 +9,6 @@ class BlockParser(Parser):
 
     def __init__(self) -> None:
         super().__init__()
-        self.is_sorted = False
         
     def __call__(self, lines: List[str]):
 
@@ -59,11 +58,15 @@ class EmptyBlockHandler(Handler):
 
     def __call__(self, root: Block, text: str):
         root.addBlock(EmptyBlock(text=text))
+
     
 class EmptyBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
+        return ''
 
 class EscapeCharacterHandler(Handler):
     # 处理所有转义字符\以及其后面的一个字符
@@ -235,7 +238,11 @@ class HashHeaderBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
 
+        tag = 'h' + str(self.input['level'])
+        return f'<{tag}>{self.sub_blocks[0].toHTML()}</{tag}>'
 
 class TaskListHandler(Handler):
     
@@ -311,12 +318,16 @@ class QuoteHandler(Handler):
     # > 123
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^(>{1,}) (.*)')
+        self.RE = re.compile(r'^(>[ ]*>*) (.*)')
 
     def __call__(self, root: Block, text: str):
         
         match_group = re.match(self.RE,text)
-        quote_number = len(match_group.group(1))
+        quote = match_group.group(1)
+        quote_number = 0
+        for i in quote:
+            if i == '>':
+                quote_number += 1
         word = match_group.group(2)
         block = QuoteBlock(quote_number=quote_number, word=word, text=text)
         self.parser.match(block,word)
@@ -541,7 +552,10 @@ class TextBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
 
+        return self.input['word']
 
 def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树

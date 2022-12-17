@@ -41,7 +41,8 @@ class Parser:
     
     def __init__(self) -> None:
         self._handlers = [] # 保存所有注册的方法
-                
+        self.is_sorted = False
+        
     def _sort(self):
         
         # 按照优先级从高到低排序,使得解析时依次调用方法
@@ -58,7 +59,8 @@ class Parser:
     
     def info(self):
         # 查看所有已注册的方法
-        self._sort()
+        if not self.is_sorted:
+            self._sort()
         for method in self._handlers:
             name = method['name']
             class_name = method['object'].__class__.__name__
@@ -79,8 +81,8 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        # 输入的纯文本格式,用于恢复code block中代码
-        # self._word = self.input.get('word',None) # 输入的核心文本信息
+        # input['text']: 输入的纯文本格式,用于恢复code block中代码
+        # input['word']: 输入的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__
         self.__repr__ = self.__str__
@@ -152,6 +154,10 @@ class Block:
                 output_str += f'[{block.__class__.__name__}] {str(block)}\n'
                 output_str += block.printInfo(deep+1)
             return output_str
+      
+    def toHTML(self):
+        # 转换成HTML格式
+        raise NotImplementedError
       
                     
 class Handler:
