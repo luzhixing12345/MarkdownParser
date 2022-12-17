@@ -88,7 +88,7 @@ class EscapeCharacterHandler(Handler):
 
     def subFunc(self,match:re.Match):
         character = match.group(1)
-        pic_block = EscapeCharacterBlock(word=character)
+        pic_block = EscapeCharacterBlock(word=character,text=match.group())
         replace_name = self.block.register(pic_block) # 注册并替换名字
         return replace_name
         
@@ -112,7 +112,6 @@ class EscapeCharacterBlock(Block):
         super().__init__(**kwargs)
 
     def toHTML(self):
-
         return self.input['word']
 
 class ExtensionBlockHandler(Handler):
@@ -153,6 +152,14 @@ class ExtensionBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
+
+        tag = self.input['tag']
+        content = ""
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        return f'<div id=\"{tag}\"\>{content}</div>'
 
 class SplitBlockHandler(Handler):
     
@@ -286,6 +293,12 @@ class TaskListBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
+
+        checked = "checked" if self.input['complete'] == 'x' else ''
+        word = self.input['word']
+        return f'<div><input type="checkbox" disabled {checked}>{word}</input></div>'
 
 
 class OListHandler(Handler):
@@ -645,7 +658,7 @@ class TextBlock(Block):
         
     def toHTML(self):
 
-        return self.input['text']
+        return self.input['word']
 
 def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树

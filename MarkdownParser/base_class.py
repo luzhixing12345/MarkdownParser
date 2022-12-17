@@ -103,7 +103,7 @@ class Block:
             # 正常文本字符
             if count % 2 == 0:
                 if string:
-                    self.addBlock(TextBlock(word=string))
+                    self.addBlock(TextBlock(word=string,text=string))
             else:
                 id = string[3:-3]
                 class_object:Block = CONTAINER[id]

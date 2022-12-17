@@ -484,7 +484,7 @@ class SpecialTextOptimizer(Optimizer):
         if root.__class__.__name__ in self.target_block_names:
             for i in range(len(root.sub_blocks)):
                 block: Block = root.sub_blocks[i]
-                root.sub_blocks[i] = TextBlock(text=block.input['text'],word=block.input['word'])
+                root.sub_blocks[i] = TextBlock(text=block.input['text'],word=block.input['text'])
                 
 
 def buildTreeParser():
