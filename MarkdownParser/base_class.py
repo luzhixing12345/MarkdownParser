@@ -81,7 +81,7 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        # input['text']: 输入的纯文本格式,用于恢复code block中代码
+        # input['text']: 输入的纯文本格式,用于恢复原始信息
         # input['word']: 输入的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__

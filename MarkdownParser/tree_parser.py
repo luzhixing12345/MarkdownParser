@@ -82,6 +82,41 @@ class HierarchyMerge(Optimizer):
         
         root.sub_blocks = new_sub_blocks
 
+class QuoteBlockMerge(Optimizer):
+    # 合并相同层级的引用模块
+    # 与HierarchyBlock不同的是,引用模块中EmptyBlock作为区分符
+    
+    def __init__(self) -> None:
+        super().__init__()
+        self.target_block_names = ['QuoteBlock']
+        
+    def __call__(self, root: Block):
+
+        new_sub_blocks = []
+        activite_block = None
+        activite_quote_number = -1
+        
+        for i in range(len(root.sub_blocks)):
+            block: Block = root.sub_blocks[i]
+            if block.block_name in self.target_block_names:
+                if activite_block is None:
+                    activite_block = block
+                    activite_quote_number = block.input['quote_number']
+                else:
+                    current_quote_number = block.input['quote_number']
+                    if current_quote_number == activite_quote_number:
+                        activite_block.sub_blocks.extend(block.sub_blocks)
+                    else:
+                        new_sub_blocks.append(activite_block)
+                        activite_block = block
+                        activite_quote_number = current_quote_number
+            else:
+                if activite_block is not None:
+                    new_sub_blocks.append(activite_block)
+                    activite_block = None
+                new_sub_blocks.append(block)
+        root.sub_blocks = new_sub_blocks
+
 class CodeBlockOptimizer(Optimizer):
     # 将代码段之间的代码恢复为纯文本并保存在input['code']
 
@@ -336,7 +371,7 @@ class TableBlockOptimizer(Optimizer):
         table_item_node = self.block_parser(table_items)
         for i in range(len(table_item_node.sub_blocks)):
             if table_item_node.sub_blocks[i].__class__.__name__ == 'EmptyBlock':
-                table_item_node.sub_blocks[i] = TextBlock(text=' ',word='')
+                table_item_node.sub_blocks[i] = TextBlock(text='',word='')
         table_block._addTableItem(table_item_node)
         # table_item_node.info()
         
@@ -393,7 +428,8 @@ class ParagraphOptimizer(Optimizer):
     def __init__(self) -> None:
         super().__init__()
         self.target_block_names = ['TextBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
-        self.interrupt_block_names = ['ParagraphBlock','HashHeaderBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
+        self.interrupt_block_names = ['ParagraphBlock','HashHeaderBlock','EscapeCharacterBlock','TableBlock','HTMLBlock','QuoteBlock',
+                                      'ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
         
     def __call__(self, root: Block):
 
@@ -437,27 +473,30 @@ class ParagraphBlock(Block):
             content += block.toHTML()
         return f'<p>{content}</p>'
         
-class EmptyBlockOptimizer(Optimizer):
-    # 剔除结尾多余的空格
-    # 行中连续的空格已经在
+class SpecialTextOptimizer(Optimizer):
+    # 将高亮的文本恢复回
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['EmptyBlock']
+        self.target_block_names = ['SpecialTextBlock']
     
     def __call__(self, root: Block):
-
-        while len(root.sub_blocks) >= 1 and root.sub_blocks[-1].block_name in self.target_block_names:
-            root.sub_blocks.pop()
+        # return
+        if root.__class__.__name__ in self.target_block_names:
+            for i in range(len(root.sub_blocks)):
+                block: Block = root.sub_blocks[i]
+                root.sub_blocks[i] = TextBlock(text=block.input['text'],word=block.input['word'])
+                
 
 def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
     tree_parser.register(HierarchyMerge(),100)
+    tree_parser.register(QuoteBlockMerge(),95)
     tree_parser.register(CodeBlockOptimizer(),90)
     tree_parser.register(HierarchyEliminate(),85)
     tree_parser.register(OListSerialOptimizer(),80)
     tree_parser.register(ExtensionOptimizer(),70)
     tree_parser.register(TableBlockOptimizer(),60)
     tree_parser.register(ParagraphOptimizer(),50)
-    tree_parser.register(EmptyBlockOptimizer(),0)
+    tree_parser.register(SpecialTextOptimizer(),0)
     return tree_parser

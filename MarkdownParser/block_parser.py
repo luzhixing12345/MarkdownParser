@@ -38,6 +38,14 @@ class ComplexBlock(Block):
     
     def __init__(self,**kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
+
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+            
+        return content
 
 class HTMLBlock(Block):
     # 处理HTML标签
@@ -46,6 +54,9 @@ class HTMLBlock(Block):
 
     def __str__(self):
         return '<html>'
+    
+    def toHTML(self):
+        return self.input['text']
     
 class EmptyBlockHandler(Handler):
     # 处理空行
@@ -99,6 +110,10 @@ class EscapeCharacterBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+    def toHTML(self):
+
+        return self.input['word']
 
 class ExtensionBlockHandler(Handler):
     # 自定义扩展
@@ -154,8 +169,11 @@ class SplitBlock(Block):
         super().__init__(**kwargs)
         
     def __str__(self):
-        return '---<br>---'
-
+        return '---<hr>---'
+    
+    def toHTML(self):
+        return '<hr>'
+        
 class HierarchyIndentHandler(Handler):
     # 匹配层次缩进
     # - 123
@@ -210,6 +228,10 @@ class CodeBlock(Block):
         # code用于在优化阶段用于整合所有的代码
         super().__init__(code='',**kwargs)
         
+    def toHTML(self):
+        code = self.input['code']
+        return f'<code disabled=true>{code}</code>'
+
 class HashHeaderHandler(Handler):
     # 匹配标题
     # ### 123
@@ -291,6 +313,13 @@ class OListBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         
+    def toHTML(self):
+
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        serial_number = self.input['serial_number']
+        return f'<ol start=\"{serial_number}\"><li>{content}</li></ol>'
 
 class UListHandler(Handler):
     
@@ -312,6 +341,14 @@ class UListBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        
+    def toHTML(self):
+
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        
+        return f'<ul><li>{content}</li></ul>'
         
 class QuoteHandler(Handler):
     # 匹配引用
@@ -338,6 +375,14 @@ class QuoteBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
+    def toHTML(self):
+        
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+            
+        return f'<blockquote>{content}</blockquote>'
+
 class PictureHandler(Handler):
     # 匹配图片 
     # ![asd](123)
@@ -362,7 +407,6 @@ class PictureHandler(Handler):
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
-            self.block.sub_blocks[0].input['text'] = text
             self.block = self.block.sub_blocks[0]
             
         root.addBlock(self.block)
@@ -372,6 +416,10 @@ class PictureBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
     
+    def toHTML(self):
+        word = self.input['word']
+        url = self.input['url']
+        return f'<img src=\"{url}\" alt=\"{word}\"></img>'
         
 class ReferenceHandler(Handler):
     # 处理引用
@@ -395,12 +443,12 @@ class ReferenceHandler(Handler):
         if url == None:
             url = match.group(4)
             word = url
-        ref_block = ReferenceBlock(word=word,url=url)
+        ref_block = ReferenceBlock(word=word,url=url,text=match.group())
         replace_name = self.block.register(ref_block) # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
+        
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE,self.subFunc,text)
@@ -408,15 +456,22 @@ class ReferenceHandler(Handler):
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
-            self.block.sub_blocks[0].input['text'] = text
             self.block = self.block.sub_blocks[0]
         root.addBlock(self.block)
         
 class ReferenceBlock(Block):
     
     def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs)     
+        super().__init__(**kwargs)
+        # 默认Markdown启用的是_self, 这里存粹是因为我自己的习惯所以改成 _blank
+        self.target = '_blank'
+        # self.target = '_self'
 
+    def toHTML(self):
+
+        url = self.input['url']
+        word = self.input['word']
+        return f"<a href=\"{url}\" target=\"{self.target}\">{word}</a>"
 
 class SpecialTextHandler(Handler):
     # 处理特殊字符
@@ -436,7 +491,7 @@ class SpecialTextHandler(Handler):
         )""", re.VERBOSE)
         self.groupid_tag = {
             2: 'bold+italics',
-            3: 'bold+italic',
+            3: 'bold+italics',
             4: 'bold',
             5: 'italic',
             6: 'italic',
@@ -452,7 +507,7 @@ class SpecialTextHandler(Handler):
                 word = match.group(k)
                 tag = v
                 break
-        special_text_block = SpecialTextBlock(word=word,tag=tag)
+        special_text_block = SpecialTextBlock(word=word,tag=tag,text=match.group())
         replace_name = self.block.register(special_text_block) # 注册并替换名字
         return replace_name
 
@@ -465,7 +520,6 @@ class SpecialTextHandler(Handler):
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
-            self.block.sub_blocks[0].input['text'] = text
             self.block = self.block.sub_blocks[0]
         root.addBlock(self.block)
         
@@ -475,6 +529,23 @@ class SpecialTextBlock(Block):
     
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+
+    def toHTML(self):
+
+        tag = self.input['tag']
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        if tag == 'bold+italics':
+            return f'<i><b>{content}</b></i>'
+        elif tag == 'bold':
+            return f'<b>{content}</b>'
+        elif tag == 'italic':
+            return f'<i>{content}</i>'
+        elif tag == 'delete':
+            return f'<del>{content}</del>'
+        elif tag == 'highlight':
+            return f'<mark>{content}</mark>'
 
 
 class TableHandler(Handler):
@@ -511,6 +582,25 @@ class TableBlock(Block):
         # 将一个table表项添加到Block中
         self.sub_blocks.extend(block.sub_blocks)
     
+    def toHTML(self):
+
+        alignments = self.input['alignments']
+        
+        table_header_content = '<tr>'
+        for block in self.input['header'].sub_blocks:
+            table_header_content += f'<th>{block.toHTML()}</th>'
+        table_header_content += '</tr>'
+        
+        table_items_content = ''
+        for i in range(len(self.sub_blocks)):
+            if i%len(alignments) == 0:
+                table_items_content += '<tr>'
+            align_style = alignments[i % len(alignments)]
+            table_items_content += f'<td style=\"text-align:{align_style}\">{self.sub_blocks[i].toHTML()}</td>'
+            if (i+1) % len(alignments) == 0:
+                table_items_content += '</tr>'
+            
+        return f'<table border=1>{table_header_content}{table_items_content}</table>'
 
 class TextHandler(Handler):
     # 处理常规文本
@@ -555,7 +645,7 @@ class TextBlock(Block):
         
     def toHTML(self):
 
-        return self.input['word']
+        return self.input['text']
 
 def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树

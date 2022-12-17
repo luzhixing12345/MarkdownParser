@@ -63,7 +63,7 @@ class HTMLLabelHandler(Handler):
         def subFunc(match):
             global CONTAINER
             src = match.group(0)
-            block = HTMLBlock(word = src)
+            block = HTMLBlock(text=src,word=src)
             return CONTAINER.register(block)
         
         text = re.sub(self.RE,subFunc,text)
