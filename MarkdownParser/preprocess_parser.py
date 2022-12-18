@@ -53,8 +53,9 @@ class HTMLLabelHandler(Handler):
             <p[\s\S]*?>[\s\S]*?<\/p>|            # p
             <image[\s\S]*?>(?:<\/image>)?|   # image
             <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
-            <br\/?>)"""                              # br
-            ,re.VERBOSE)
+            <br\/?>|
+            <kbd>[\s\S]*?</kbd>
+            )""",re.VERBOSE)
 
     def __call__(self, text: str):
         

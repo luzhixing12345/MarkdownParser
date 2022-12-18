@@ -237,7 +237,11 @@ class CodeBlock(Block):
         
     def toHTML(self):
         code = self.input['code']
-        return f'<code disabled=true>{code}</code>'
+        code = re.sub('&','&amp;',code)
+        code = re.sub('<','&lt;',code)
+        code = re.sub('>','&gt;',code)
+        code = re.sub('\"','&quot;',code)
+        return f'<pre>{code}</pre>'
 
 class HashHeaderHandler(Handler):
     # 匹配标题

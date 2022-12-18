@@ -157,7 +157,10 @@ class Block:
       
     def toHTML(self):
         # 转换成HTML格式
-        raise NotImplementedError
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        return f"<div class='markdown-body'>{content}</div>"
       
                     
 class Handler:

@@ -28,9 +28,9 @@ class Markdown:
         
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
-        
         # # 输出到屏幕 / 导出html文件
-        self.export_processor(tree)
+        html = self.export_processor(tree)
+        return html
 
 def parse(text:str):
     
