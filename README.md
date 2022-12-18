@@ -8,11 +8,11 @@ Markdown 语法解析器
 python main.py
 ```
 
-## 示例
-
 使用的markdown文件为[test.md](testfiles/test.md)
 
-[渲染结果](https://luzhixing12345.github.io/MarkdownParser/)
+渲染结果:
+
+![20221218105954](https://raw.githubusercontent.com/learner-lu/picbed/master/20221218105954.png)
 
 ## 不支持
 
