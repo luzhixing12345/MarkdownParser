@@ -12,7 +12,7 @@ python main.py
 
 渲染结果:
 
-![20221218105954](https://raw.githubusercontent.com/learner-lu/picbed/master/20221218105954.png)
+![20221219174226](https://raw.githubusercontent.com/learner-lu/picbed/master/20221219174226.png)
 
 ## 不支持
 

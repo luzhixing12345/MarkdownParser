@@ -241,7 +241,7 @@ class CodeBlock(Block):
         code = re.sub('<','&lt;',code)
         code = re.sub('>','&gt;',code)
         code = re.sub('\"','&quot;',code)
-        return f'<pre>{code}</pre>'
+        return f'<pre><code>{code}</code></pre>'
 
 class HashHeaderHandler(Handler):
     # 匹配标题
@@ -557,7 +557,7 @@ class SpecialTextBlock(Block):
         elif tag == 'delete':
             return f'<del>{content}</del>'
         elif tag == 'highlight':
-            return f'<mark>{content}</mark>'
+            return f'<code>{content}</code>'
 
 
 class TableHandler(Handler):
