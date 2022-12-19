@@ -372,18 +372,13 @@ class QuoteHandler(Handler):
     # > 123
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^(>[ ]*>*) (.*)')
+        self.RE = re.compile(r'^>[ ]*(.*)')
 
     def __call__(self, root: Block, text: str):
         
         match_group = re.match(self.RE,text)
-        quote = match_group.group(1)
-        quote_number = 0
-        for i in quote:
-            if i == '>':
-                quote_number += 1
-        word = match_group.group(2)
-        block = QuoteBlock(quote_number=quote_number, word=word, text=text)
+        word = match_group.group(1)
+        block = QuoteBlock(word=word, text=text)
         self.parser.match(block,word)
         root.addBlock(block)
         
@@ -436,7 +431,7 @@ class PictureBlock(Block):
     def toHTML(self):
         word = self.input['word']
         url = self.input['url']
-        return f'<img src=\"{url}\" alt=\"{word}\"></img>'
+        return f'<img src=\"{url}\" alt=\"{word}\">'
         
 class ReferenceHandler(Handler):
     # 处理引用

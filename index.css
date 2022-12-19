@@ -1,0 +1,36 @@
+
+html,body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #f8f9fa;
+}
+
+.markdown-body {
+    margin-left: 20%;
+    margin-right: 20%;
+    padding: 20px 50px;
+    /* width: 50%; */
+    /* justify-content: center; */
+    /* align-items: center; */
+    background-color: rgb(255, 255, 255);
+}
+
+a {
+    color: rgb(4, 105, 221);
+    text-decoration: none;
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+blockquote {
+    margin: 0;
+    margin-top: 0;
+    margin-bottom: 16px;
+    padding: 0 1em;
+    color: #6a737d;
+    border-left: .25em solid #dfe2e5;
+}

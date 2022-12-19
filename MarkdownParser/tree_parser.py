@@ -94,27 +94,23 @@ class QuoteBlockMerge(Optimizer):
 
         new_sub_blocks = []
         activite_block = None
-        activite_quote_number = -1
         
         for i in range(len(root.sub_blocks)):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
                 if activite_block is None:
                     activite_block = block
-                    activite_quote_number = block.input['quote_number']
                 else:
-                    current_quote_number = block.input['quote_number']
-                    if current_quote_number == activite_quote_number:
-                        activite_block.sub_blocks.extend(block.sub_blocks)
-                    else:
-                        new_sub_blocks.append(activite_block)
-                        activite_block = block
-                        activite_quote_number = current_quote_number
+                    activite_block.sub_blocks.extend(block.sub_blocks)
             else:
                 if activite_block is not None:
                     new_sub_blocks.append(activite_block)
                     activite_block = None
                 new_sub_blocks.append(block)
+        
+        if activite_block is not None:
+            new_sub_blocks.append(activite_block)    
+            
         root.sub_blocks = new_sub_blocks
 
 class CodeBlockOptimizer(Optimizer):
