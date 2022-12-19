@@ -1,16 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel='stylesheet' href='./index.css' />
+    <!-- <link rel='stylesheet' href='./index.css' /> -->
+    <!-- <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/default.min.css">
+    <script src="//cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    <script>hljs.highlightAll();</script> -->
 </head>
+
 <body>
-    <div class='markdown-body'><h1>话不多说</h1><h2>一二级标题和<a href="https://github.com/" target="_blank">地址跳转先来一个</a></h2><p><img src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png" alt="图片下的文字"></p><p>虽然它们写在两行但是它们应该在一行</p><blockquote>三个一样的符号可以创造一条水平线,对了这个是注释<blockquote>这是一个二级注释</blockquote></blockquote><hr><pre><code>git commit -m &quot;[docs] : git commit -m&quot;</code></pre><div align="center">我猜测绝大部分使用html标签都是为了居中...</div><ol start="1"><li>有序列表</li></ol><ol start="2"><li>第二个有序列表<ul><li>搞一个无序列表试试看?</li></ul><ul><li>不过是ui oi吗</li></ul><ul><li>我想应该不难吧...<ul><li>别嵌套了球球了</li></ul></li></ul><ul><li>树已经很深了</li></ul></li></ol><p>或许我们可以支持<b>使用\*来强调</b>,或者试试<i>斜体?</i>,还有我最喜欢的<code>加亮!</code></p><pre><code>#include &lt;iostream&gt;
+    <div class='markdown-body'>
+        <h1>话不多说</h1>
+        <h2>一二级标题和<a href="https://github.com/" target="_blank">地址跳转先来一个</a></h2>
+        <p><img src="https://raw.githubusercontent.com/learner-lu/picbed/master/20221206224758.png" alt="图片下的文字"></p>
+        <p>虽然它们写在两行但是它们应该在一行</p>
+        <blockquote>三个一样的符号可以创造一条水平线,对了这个是注释<blockquote>这是一个二级注释</blockquote>
+        </blockquote>
+        <hr>
+        <pre><code>git commit -m "[docs] : git commit -m"</code></pre>
+        <div align="center">我猜测绝大部分使用html标签都是为了居中...</div>
+        <ol start="1">
+            <li>有序列表</li>
+        </ol>
+        <ol start="2">
+            <li>第二个有序列表<ul>
+                    <li>搞一个无序列表试试看?</li>
+                </ul>
+                <ul>
+                    <li>不过是ui oi吗</li>
+                </ul>
+                <ul>
+                    <li>我想应该不难吧...<ul>
+                            <li>别嵌套了球球了</li>
+                        </ul>
+                    </li>
+                </ul>
+                <ul>
+                    <li>树已经很深了</li>
+                </ul>
+            </li>
+        </ol>
+        <p>或许我们可以支持<b>使用\*来强调</b>,或者试试<i>斜体?</i>,还有我最喜欢的<code>加亮!</code></p>
+        <pre><code>#include &lt;iostream&gt;
 int main(int argc,char**argv) {
-    std::cout &lt;&lt; &quot;markdown怎么能少了代码段呢?&quot; &lt;&lt; std::endl;
-}</code></pre><table border=1><tr><th>不会有人</th><th>写代码</th><th>居然不支持</th></tr><tr><td style="text-align:left">md的表格</td><td style="text-align:center">和它的</td><td style="text-align:right">对齐方式吧</td></tr><tr><td style="text-align:left">不会吧</td><td style="text-align:center">不会吧</td><td style="text-align:right">不会吧</td></tr></table><div id="note"\><p>或许我们可以尝试一下支持自定义标签</p></div></div>
+    std::cout &lt;&lt; "markdown怎么能少了代码段呢?" &lt;&lt; std::endl;
+}</code></pre>
+        <table border=1>
+            <tr>
+                <th>不会有人</th>
+                <th>写代码</th>
+                <th>居然不支持</th>
+            </tr>
+            <tr>
+                <td style="text-align:left">md的表格</td>
+                <td style="text-align:center">和它的</td>
+                <td style="text-align:right">对齐方式吧</td>
+            </tr>
+            <tr>
+                <td style="text-align:left">不会吧</td>
+                <td style="text-align:center">不会吧</td>
+                <td style="text-align:right">不会吧</td>
+            </tr>
+        </table>
+        <div id="note" \>
+            <p>或许我们可以尝试一下支持自定义标签</p>
+        </div>
+    </div>
 </body>
+
 </html>

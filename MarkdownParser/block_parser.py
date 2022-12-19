@@ -237,10 +237,8 @@ class CodeBlock(Block):
         
     def toHTML(self):
         code = self.input['code']
-        code = re.sub('&','&amp;',code)
         code = re.sub('<','&lt;',code)
         code = re.sub('>','&gt;',code)
-        code = re.sub('\"','&quot;',code)
         return f'<pre><code>{code}</code></pre>'
 
 class HashHeaderHandler(Handler):
