@@ -2,7 +2,7 @@
 
 from .base_class import Parser,Handler
 import re
-from .block_parser import HTMLBlock
+from .block_parser import HTMLBlock,EscapeCharacterBlock
 from .base_class import CONTAINER
 
 class PreprocessParser(Parser):
@@ -22,20 +22,45 @@ class PreprocessParser(Parser):
     def getHtmlPosition(self):
         return self.preprocess_parser['html'].match_results
 
-class TextCharacterHander(Handler):
+class TabHandler(Handler):
 
     def __init__(self, tabsize: int) -> None:
         super().__init__()
         self.tabsize = tabsize
+        
+    def __call__(self, text: str):
+        
+        text = text.replace("\r\n", "\n").replace("\r", "\n")
+        text = text.expandtabs(tabsize=self.tabsize)
+        
+        return text
+
+class EscapeCharacterHandler(Handler):
+    # 处理转义字符
+    
+    def __init__(self, parser=None) -> None:
+        super().__init__(parser)
+        
+    def subFunc(self,match):
+        global CONTAINER
+        word = match.group(1)
+        block = EscapeCharacterBlock(word=word,text=match.group())
+        return CONTAINER.register(block)
 
     def __call__(self, text: str):
 
-        text = text.replace("\r\n", "\n").replace("\r", "\n")
-        text = text.expandtabs(tabsize=self.tabsize)
-        text = re.sub(r'(?<!\\)\<!--[\s\S]*?--\>','',text)                # 去除注释
+        text = re.sub(r'\\(.)',self.subFunc,text)
+        return text
+
+class AnnotateHandler(Handler):
+    # 去除注释
+    
+    def __init__(self, parser=None) -> None:
+        super().__init__(parser)
         
-        # text = re.sub(r'^[ ]{1,3}[^ ]', '', text, flags=re.M) # 每行开头四个以下空格去掉
-        # text = re.sub(r'[ ]{1,}$', '', text, flags=re.M)      # 每行结尾空格去掉
+    def __call__(self, text: str):
+    
+        text = re.sub(r'\<!--[\s\S]*?--\>','',text)                # 去除注释
         return text
 
 
@@ -59,8 +84,6 @@ class HTMLLabelHandler(Handler):
 
     def __call__(self, text: str):
         
-
-        
         def subFunc(match):
             global CONTAINER
             src = match.group(0)
@@ -78,6 +101,8 @@ class HTMLLabelHandler(Handler):
 def buildPreprocessParser(tabsize):
     # preprocess parser 用于预处理空行/注释/HTML标签
     preprocess_parser = PreprocessParser()
-    preprocess_parser.register(TextCharacterHander(tabsize), priority=100)
+    preprocess_parser.register(TabHandler(tabsize), priority=100)
+    preprocess_parser.register(EscapeCharacterHandler(),priority=90)
+    preprocess_parser.register(AnnotateHandler(),priority=85)
     preprocess_parser.register(HTMLLabelHandler(), priority= 80)
     return preprocess_parser

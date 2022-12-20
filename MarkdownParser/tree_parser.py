@@ -423,7 +423,7 @@ class ParagraphOptimizer(Optimizer):
     
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['TextBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
+        self.target_block_names = ['TextBlock','ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock','EscapeCharacterBlock']
         self.interrupt_block_names = ['ParagraphBlock','HashHeaderBlock','EscapeCharacterBlock','TableBlock','HTMLBlock','QuoteBlock',
                                       'ComplexBlock','ReferenceBlock','PictureBlock','SpecialTextBlock']
         
@@ -431,7 +431,6 @@ class ParagraphOptimizer(Optimizer):
 
         if root.__class__.__name__ in self.interrupt_block_names:
             return
-        
         activite_block = None
         new_sub_blocks = []
         

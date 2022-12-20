@@ -22,13 +22,16 @@ class Markdown:
         
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
-        
+        print(lines)
         # 逐行解析,得到一颗未优化的树
         root = self.block_parser(lines)
-        
+        root.info()
+        print('---')
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
-        # # 输出到屏幕 / 导出html文件
+        tree.info()
+        return 
+        # 输出到屏幕 / 导出html文件
         html = self.export_processor(tree)
         return html
 

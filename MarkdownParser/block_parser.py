@@ -79,33 +79,6 @@ class EmptyBlock(Block):
     def toHTML(self):
         return ''
 
-class EscapeCharacterHandler(Handler):
-    # 处理所有转义字符\以及其后面的一个字符
-    
-    def __init__(self, parser=None) -> None:
-        super().__init__(parser)
-        self.RE = re.compile(r'\\(.)')
-
-    def subFunc(self,match:re.Match):
-        character = match.group(1)
-        pic_block = EscapeCharacterBlock(word=character,text=match.group())
-        replace_name = self.block.register(pic_block) # 注册并替换名字
-        return replace_name
-        
-    def __call__(self, root: Block, text: str):
-        
-        self.block = ComplexBlock(text=text)
-        # 替换所有匹配项并重新解析new_text       
-        new_text = re.sub(self.RE,self.subFunc,text)
-        
-        self.parser.match(self.block,new_text)
-        # 单匹配去掉外层 ComplexBlock
-        if len(self.block.sub_blocks) == 1:
-            self.block.sub_blocks[0].input['text'] = text
-            self.block = self.block.sub_blocks[0]
-            
-        root.addBlock(self.block)
-
 class EscapeCharacterBlock(Block):
     
     def __init__(self, **kwargs) -> None:
@@ -661,7 +634,6 @@ def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 100)
-    block_parser.register(EscapeCharacterHandler(block_parser), 99)
     block_parser.register(ExtensionBlockHandler(block_parser), 98)
     block_parser.register(SplitBlockHandler(block_parser), 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 90)
