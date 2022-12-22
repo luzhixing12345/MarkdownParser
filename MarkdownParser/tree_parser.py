@@ -476,7 +476,7 @@ class SpecialTextOptimizer(Optimizer):
     
     def __call__(self, root: Block):
         # return
-        if root.__class__.__name__ in self.target_block_names:
+        if root.__class__.__name__ in self.target_block_names and root.input['tag'] == 'highlight':
             for i in range(len(root.sub_blocks)):
                 block: Block = root.sub_blocks[i]
                 root.sub_blocks[i] = TextBlock(text=block.input['text'],word=block.input['text'])

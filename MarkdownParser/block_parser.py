@@ -191,7 +191,7 @@ class CodeBlockHandler(Handler):
         self.RE = re.compile(r'`{3,}(.*)')
         
     def __call__(self, root: Block, text: str):
-        print(text)
+
         match_group = re.match(self.RE,text)
         language = match_group.group(1).strip()
         
@@ -498,7 +498,7 @@ class SpecialTextHandler(Handler):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE,self.subFunc,text)
-        print(new_text)
+
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:

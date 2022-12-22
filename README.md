@@ -21,6 +21,7 @@ python main.py
 - Latex数学公式
 - Setext 形式的标题
 - 上标 / 下标 / 下划线
+- SpecialTextBlock中叠加使用有可能会有bug
 
 ## 相关参考
 
