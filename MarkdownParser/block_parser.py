@@ -191,7 +191,7 @@ class CodeBlockHandler(Handler):
         self.RE = re.compile(r'`{3,}(.*)')
         
     def __call__(self, root: Block, text: str):
-        
+        print(text)
         match_group = re.match(self.RE,text)
         language = match_group.group(1).strip()
         
@@ -435,7 +435,6 @@ class ReferenceHandler(Handler):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE,self.subFunc,text)
-
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -499,7 +498,7 @@ class SpecialTextHandler(Handler):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE,self.subFunc,text)
-        
+        print(new_text)
         self.parser.match(self.block,new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -637,12 +636,12 @@ def buildBlockParser():
     block_parser.register(ExtensionBlockHandler(block_parser), 98)
     block_parser.register(SplitBlockHandler(block_parser), 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 90)
-    block_parser.register(CodeBlockHandler(block_parser), 80)
-    block_parser.register(HashHeaderHandler(block_parser), 70)
-    block_parser.register(TaskListHandler(block_parser), 50)
-    block_parser.register(OListHandler(block_parser), 40)
-    block_parser.register(UListHandler(block_parser), 30)
-    block_parser.register(QuoteHandler(block_parser), 20)
+    block_parser.register(HashHeaderHandler(block_parser), 80)
+    block_parser.register(TaskListHandler(block_parser), 70)
+    block_parser.register(OListHandler(block_parser), 60)
+    block_parser.register(UListHandler(block_parser), 50)
+    block_parser.register(QuoteHandler(block_parser), 40)
+    block_parser.register(CodeBlockHandler(block_parser), 30)
     block_parser.register(PictureHandler(block_parser), 15)
     block_parser.register(ReferenceHandler(block_parser), 10)
     block_parser.register(SpecialTextHandler(block_parser), 5)

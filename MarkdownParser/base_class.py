@@ -11,7 +11,7 @@ class Container:
         }
         
         self._counter = 0
-        self.__str__ == self.__repr__
+        self.__str__ = self.__repr__
 
     def __repr__(self) -> str:
         
@@ -33,6 +33,8 @@ class Container:
         self._counter += 1
         self._container[_name] = class_object
         return '{-%' + _name + '%-}'
+
+        
         
 CONTAINER = Container()
 
