@@ -1,12 +1,13 @@
 
 from .base_class import Parser, Block
 import re
-
+import os
 class ExportParser(Parser):
     
     def __init__(self) -> None:
         super().__init__()
-        with open('./MarkdownParser/template.html','r',encoding='utf-8') as f:
+        template_path = os.path.join(os.path.dirname(__file__),'template.html')
+        with open(template_path,'r',encoding='utf-8') as f:
             template_html = f.read()
         self.template_htmls = re.split(r'css-scope|html-scope|js-scope',template_html)
 
