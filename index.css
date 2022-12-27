@@ -230,6 +230,6 @@ blockquote {
   line-height: 1.25;
 }
 
-/* .markdown-body pre {
+.markdown-body pre {
     padding: 0;
-} */
+}

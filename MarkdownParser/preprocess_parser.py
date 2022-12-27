@@ -2,7 +2,7 @@
 
 from .base_class import Parser,Handler
 import re
-from .block_parser import HTMLBlock,EscapeCharacterBlock
+from .block_parser import HTMLBlock,EscapeCharacterBlock,AnnotateBlock
 from .base_class import CONTAINER
 
 class PreprocessParser(Parser):
@@ -58,9 +58,15 @@ class AnnotateHandler(Handler):
     def __init__(self, parser=None) -> None:
         super().__init__(parser)
         
+    def subFunc(self,match):
+        global CONTAINER
+        word = match.group()
+        block = AnnotateBlock(word=word,text=word)
+        return CONTAINER.register(block)
+        
     def __call__(self, text: str):
     
-        text = re.sub(r'\<!--[\s\S]*?--\>','',text)                # 去除注释
+        text = re.sub(r'\<!--[\s\S]*?--\>',self.subFunc,text)                # 去除注释
         return text
 
 
