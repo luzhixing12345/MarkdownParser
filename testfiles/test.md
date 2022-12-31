@@ -1,8 +1,1 @@
-
-
-```c
-
-<!-- adm.asm -->
-```
-123
-<!-- adm.asm -->
+[![Tranquilpeak](http://d1u9biwaxjngwg.cloudfront.net/showcases/showcase-v2.jpg)](http://louisbarranqueiro.github.io/hexo-theme-tranquilpeak)

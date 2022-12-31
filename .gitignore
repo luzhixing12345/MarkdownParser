@@ -130,3 +130,4 @@ dmypy.json
 
 /markdown
 test.py
+.vscode/

@@ -463,8 +463,10 @@ class ReferenceBlock(Block):
     def toHTML(self):
 
         url = self.input['url']
-        word = self.input['word']
-        return f"<a href=\"{url}\" target=\"{self.target}\">{word}</a>"
+        content = ''
+        for block in self.sub_blocks:
+            content += block.toHTML()
+        return f"<a href=\"{url}\" target=\"{self.target}\">{content}</a>"
 
 class SpecialTextHandler(Handler):
     # 处理特殊字符
