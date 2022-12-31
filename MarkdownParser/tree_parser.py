@@ -65,6 +65,7 @@ class HierarchyMerge(Optimizer):
                             activite_block.sub_blocks.append(block)
                     # 层次相同,合并
                     elif current_space_number == activite_space_number:
+                        activite_block.input['text'] += '\n' + block.input['text']
                         activite_block.sub_blocks.extend(block.sub_blocks)
                     else:
                         # 层次缩进改变
@@ -138,7 +139,16 @@ class CodeBlockOptimizer(Optimizer):
                     new_sub_blocks.append(activite_CodeBlock)
                     activite_CodeBlock = None
                     continue
-                activite_CodeBlock.input['code'] += block.input['text'] + '\n'
+                # if len(block.sub_blocks) > 1:
+                #     pure_text = ''
+                #     for b in block.sub_blocks:
+                #         print(b)
+                #         pure_text += b.input['text']
+                # else:
+                #     pure_text = block.input['text']
+                pure_text = block.input['text']
+                print(block)
+                activite_CodeBlock.input['code'] += pure_text + '\n'
             else:
                 if block.block_name in self.target_block_names:
                     restore_text = True
@@ -486,12 +496,12 @@ def buildTreeParser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
     tree_parser.register(HierarchyMerge(),100)
-    tree_parser.register(QuoteBlockMerge(),95)
+    # tree_parser.register(QuoteBlockMerge(),95)
     tree_parser.register(CodeBlockOptimizer(),90)
-    tree_parser.register(HierarchyEliminate(),85)
-    tree_parser.register(OListSerialOptimizer(),80)
-    tree_parser.register(ExtensionOptimizer(),70)
-    tree_parser.register(TableBlockOptimizer(),60)
-    tree_parser.register(ParagraphOptimizer(),50)
-    tree_parser.register(SpecialTextOptimizer(),0)
+    # tree_parser.register(HierarchyEliminate(),85)
+    # tree_parser.register(OListSerialOptimizer(),80)
+    # tree_parser.register(ExtensionOptimizer(),70)
+    # tree_parser.register(TableBlockOptimizer(),60)
+    # tree_parser.register(ParagraphOptimizer(),50)
+    # tree_parser.register(SpecialTextOptimizer(),0)
     return tree_parser

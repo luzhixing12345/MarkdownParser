@@ -1,1 +1,13 @@
-[![Tranquilpeak](http://d1u9biwaxjngwg.cloudfront.net/showcases/showcase-v2.jpg)](http://louisbarranqueiro.github.io/hexo-theme-tranquilpeak)
+# 配置信息
+
+```c
+#include <stdio.h>
+
+int main() {
+    int x = 10;
+    for (int i=0;i<10;i++) {
+        printf("x+i = %d\n",x+i);
+    }
+    return 0;
+}
+```

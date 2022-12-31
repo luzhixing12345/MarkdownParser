@@ -25,12 +25,14 @@ class Markdown:
         
         # 逐行解析,得到一颗未优化的树
         root = self.block_parser(lines)
-
+        # print('---\n\n')
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
         tree.info()
+        # print('---\n\n')
         # 输出到屏幕 / 导出html文件
         html = self.export_processor(tree)
+        # print(html)
         return html
 
 def parse(text:str):

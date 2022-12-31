@@ -44,7 +44,7 @@ class EscapeCharacterHandler(Handler):
     def subFunc(self,match):
         global CONTAINER
         word = match.group(1)
-        block = EscapeCharacterBlock(word=word,text=match.group())
+        block = EscapeCharacterBlock(word=word,text='\\'+word)
         return CONTAINER.register(block)
 
     def __call__(self, text: str):

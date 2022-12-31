@@ -110,6 +110,7 @@ class Block:
                 id = string[3:-3]
                 class_object:Block = CONTAINER[id]
                 class_object.restore(TextBlock)
+                self.input['text'] = self.input['text'].replace(string,class_object.input['text'])
                 self.addBlock(class_object)
             count += 1
     
