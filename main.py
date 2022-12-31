@@ -8,7 +8,7 @@ def main():
         text = f.read()
         
     html = MarkdownParser.parse(text)
-    # print(html)
+    print(html)
 
     
 if __name__ == "__main__":

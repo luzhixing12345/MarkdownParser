@@ -28,7 +28,7 @@ class Markdown:
         # print('---\n\n')
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
-        tree.info()
+        # tree.info()
         # print('---\n\n')
         # 输出到屏幕 / 导出html文件
         html = self.export_processor(tree)
