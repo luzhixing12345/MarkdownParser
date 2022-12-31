@@ -99,7 +99,6 @@ class Block:
         global CONTAINER
         RE = re.compile(r'({-%.*?%-})')
         split_strings = RE.split(self.input['word'])
-
         count = 0
         for string in split_strings:
             # 正常文本字符

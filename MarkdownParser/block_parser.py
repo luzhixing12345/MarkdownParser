@@ -12,7 +12,7 @@ class BlockParser(Parser):
         
     def __call__(self, lines: List[str]):
 
-        self.root = Block()
+        self.root = Block(text='')
         if not self.is_sorted:
             self._sort()
             self.is_sorted = True
