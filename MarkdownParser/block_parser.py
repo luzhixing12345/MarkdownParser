@@ -284,7 +284,7 @@ class TaskListBlock(Block):
 
         checked = "checked" if self.input['complete'] == 'x' else ''
         word = self.input['word']
-        return f'<div><input type="checkbox" disabled {checked}>{word}</input></div>'
+        return f'<div><input type="checkbox" disabled {checked}>{word}</div>'
 
 
 class OListHandler(Handler):
