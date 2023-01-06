@@ -24,14 +24,13 @@ class PreprocessParser(Parser):
 
 class TabHandler(Handler):
 
-    def __init__(self, tabsize: int) -> None:
+    def __init__(self) -> None:
         super().__init__()
-        self.tabsize = tabsize
         
     def __call__(self, text: str):
         
         text = text.replace("\r\n", "\n").replace("\r", "\n")
-        text = text.expandtabs(tabsize=self.tabsize)
+        text = text.expandtabs(tabsize=4)
         
         return text
 
@@ -104,10 +103,10 @@ class HTMLLabelHandler(Handler):
         return text
 
 
-def buildPreprocessParser(tabsize):
+def buildPreprocessParser():
     # preprocess parser 用于预处理空行/注释/HTML标签
     preprocess_parser = PreprocessParser()
-    preprocess_parser.register(TabHandler(tabsize), priority=100)
+    preprocess_parser.register(TabHandler(), priority=100)
     preprocess_parser.register(EscapeCharacterHandler(),priority=90)
     preprocess_parser.register(AnnotateHandler(),priority=85)
     preprocess_parser.register(HTMLLabelHandler(), priority= 80)

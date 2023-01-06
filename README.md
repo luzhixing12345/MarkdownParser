@@ -1,18 +1,23 @@
 # MarkdownParser
 
-Markdown 语法解析器
+MarkdownParser 是一个 Markdown 语法解析器,用于实现md到html标签的转换
 
-## 使用
+## 安装
 
 ```bash
-python main.py
+pip install markdownparser
 ```
 
-使用的markdown文件为[test.md](testfiles/test.md)
+## 快速使用
 
-渲染结果:
+```python
+import MarkdownParser
 
-![20221219174226](https://raw.githubusercontent.com/learner-lu/picbed/master/20221219174226.png)
+html = MarkdownParser.parse('# Hello World')
+print(html)
+
+#<div class='markdown-body'><h1>Hello World!</h1></div>
+```
 
 ## 不支持
 

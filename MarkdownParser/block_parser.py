@@ -173,7 +173,7 @@ class HierarchyIndentHandler(Handler):
     
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^([ ]{2,})(.*)')
+        self.RE = re.compile(r'^([ ]{1,})(.*)')
         
     def __call__(self, root: Block, text: str):
 
@@ -223,7 +223,8 @@ class CodeBlock(Block):
         code = self.input['code']
         code = re.sub('<','&lt;',code)
         code = re.sub('>','&gt;',code)
-        return f'<pre><code>{code}</code></pre>'
+        language = self.input['language']
+        return f'<pre><code class=\"language-{language}\">{code}</code></pre>'
 
 class HashHeaderHandler(Handler):
     # 匹配标题

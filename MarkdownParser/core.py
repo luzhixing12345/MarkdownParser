@@ -7,13 +7,11 @@ from .export_parser import buildExportProcessor
 
 class Markdown:
     def __init__(self) -> None:
-        # print("Activate MarkdownParser")
-        self.tabsize = 4
         self.build_parser()        
         
     def build_parser(self):
         
-        self.preprocess_parser = buildPreprocessParser(self.tabsize)
+        self.preprocess_parser = buildPreprocessParser()
         self.block_parser = buildBlockParser()
         self.tree_parser = buildTreeParser()
         self.export_processor = buildExportProcessor()
@@ -25,17 +23,16 @@ class Markdown:
         
         # 逐行解析,得到一颗未优化的树
         root = self.block_parser(lines)
-        root.info()
-        print('---\n\n')
+        # root.info()
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
-        tree.info()
-        # print('---\n\n')
+        # tree.info()
         # 输出到屏幕 / 导出html文件
         html = self.export_processor(tree)
         # print(html)
         return html
-
+    
+    
 def parse(text:str):
     
     assert type(text) == str, "输入应为字符串"
