@@ -35,14 +35,14 @@ class Markdown:
     def parseToRoot(self,text:str):
         lines = self.preprocess_parser(text)
         root = self.block_parser(lines)
-        root.info()
+        # root.info()
         return root
     
     def parseToTree(self,text:str):
         lines = self.preprocess_parser(text)
         root = self.block_parser(lines)
         tree = self.tree_parser(root)
-        tree.info()
+        # tree.info()
         return tree
     
 def parse(text:str)->str:

@@ -87,7 +87,6 @@ class Block:
         # input['word']: 输入的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__
-        self.__repr__ = self.__str__
     
     def register(self, class_object):
         
@@ -163,6 +162,7 @@ class Block:
         for block in self.sub_blocks:
             content += block.toHTML()
         return f"<div class='markdown-body'>{content}</div>"
+
       
                     
 class Handler:

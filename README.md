@@ -25,7 +25,7 @@ print(html)
 - `parseToRoot(text:str)->Block`: 逐行解析,得到一颗未优化的树
 - `parseToTree(text:str)->Block`: 优化,得到正确的markdown解析树
 
-其中Block类属性见'base_class.py`,可以通过print打印查看
+其中Block类属性见'base_class.py`,可以通过info()函数查看
 
 接口类
 

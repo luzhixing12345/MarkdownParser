@@ -4,8 +4,8 @@ import MarkdownParser
 
 def main():
     
-    html = MarkdownParser.parse('# Hello World')
-    print(html)
+    html = MarkdownParser.parseToTree('# Hello World')
+    html.info()
 
 
 if __name__ == "__main__":
