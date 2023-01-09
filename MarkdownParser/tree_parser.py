@@ -491,7 +491,7 @@ def buildTreeParser():
     tree_parser.register(CodeBlockOptimizer(),90)
     tree_parser.register(HierarchyEliminate(),85)
     tree_parser.register(OListSerialOptimizer(),80)
-    tree_parser.register(ExtensionOptimizer(),70)
+    # tree_parser.register(ExtensionOptimizer(),70)
     tree_parser.register(TableBlockOptimizer(),60)
     tree_parser.register(ParagraphOptimizer(),50)
     tree_parser.register(SpecialTextOptimizer(),0)

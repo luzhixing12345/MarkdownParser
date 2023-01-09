@@ -16,7 +16,7 @@ class Markdown:
         self.tree_parser = buildTreeParser()
         self.export_processor = buildExportProcessor()
 
-    def parse(self, text:str):
+    def parse(self, text:str)->str:
         
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
@@ -32,8 +32,20 @@ class Markdown:
         # print(html)
         return html
     
+    def parseToRoot(self,text:str):
+        lines = self.preprocess_parser(text)
+        root = self.block_parser(lines)
+        root.info()
+        return root
     
-def parse(text:str):
+    def parseToTree(self,text:str):
+        lines = self.preprocess_parser(text)
+        root = self.block_parser(lines)
+        tree = self.tree_parser(root)
+        tree.info()
+        return tree
+    
+def parse(text:str)->str:
     
     assert type(text) == str, "输入应为字符串"
     
@@ -43,3 +55,20 @@ def parse(text:str):
 
     md = Markdown()
     return md.parse(text)
+
+def parseFile(file_name:str)->str:
+    
+    with open(file_name,'r',encoding='utf-8') as f:
+        text = f.read()
+        
+    return parse(text)
+
+def parseToRoot(text:str):
+    
+    md = Markdown()
+    return md.parseToRoot(text)
+
+def parseToTree(text:str):
+    
+    md = Markdown()
+    return md.parseToTree(text)

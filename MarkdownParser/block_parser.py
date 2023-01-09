@@ -211,7 +211,7 @@ class CodeBlockHandler(Handler):
             root.addBlock(CodeBlock(language=language,text=text))
         else:
             # 代码段结尾
-            root.addBlock(CodeBlock(language='?',text=text))
+            root.addBlock(CodeBlock(language='UNKNOWN',text=text))
         
 class CodeBlock(Block):
     

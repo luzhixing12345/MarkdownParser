@@ -1,2 +1,2 @@
-from .core import parse
+from .core import parse, parseToTree,parseFile,parseToRoot
 from .core import Markdown

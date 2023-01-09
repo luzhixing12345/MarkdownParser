@@ -132,3 +132,5 @@ dmypy.json
 test.py
 .vscode/
 md-docs/
+index.css
+index.html
