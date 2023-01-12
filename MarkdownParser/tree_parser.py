@@ -480,7 +480,11 @@ class SpecialTextOptimizer(Optimizer):
         if root.__class__.__name__ in self.target_block_names and root.input['tag'] == 'highlight':
             for i in range(len(root.sub_blocks)):
                 block: Block = root.sub_blocks[i]
-                root.sub_blocks[i] = TextBlock(text=block.input['text'],word=block.input['text'])
+                origin_text = block.input['text']
+                # 替换以消除html元素影响
+                origin_text = re.sub('<','&lt;',origin_text)
+                origin_text = re.sub('>','&gt;',origin_text)
+                root.sub_blocks[i] = TextBlock(text=origin_text,word=origin_text)
                 
 
 def buildTreeParser():

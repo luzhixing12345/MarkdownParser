@@ -83,8 +83,8 @@ class Block:
     
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        # input['text']: 输入的纯文本格式,用于恢复原始信息
-        # input['word']: 输入的核心文本信息
+        # input['text']: 输入的纯文本,用于恢复原始信息
+        # input['word']: 解析提取后的核心文本信息
         self.sub_blocks = []
         self.block_name = self.__class__.__name__
     
@@ -94,11 +94,13 @@ class Block:
         return CONTAINER.register(class_object)
 
     def restore(self, TextBlock):
+        # restore用于恢复嵌套的block替换
         # 这里传入 TextBlock 是因为 TextBlock 还未定义
         global CONTAINER
         RE = re.compile(r'({-%.*?%-})')
         split_strings = RE.split(self.input['word'])
         count = 0
+        
         for string in split_strings:
             # 正常文本字符
             if count % 2 == 0:

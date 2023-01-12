@@ -18,7 +18,7 @@ class Markdown:
         
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
-        
+        # print(lines)
         # 逐行解析,得到一颗未优化的树
         root = self.block_parser(lines)
         # root.info()

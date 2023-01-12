@@ -98,6 +98,7 @@ class EscapeCharacterBlock(Block):
     def toHTML(self):
         return self.input['word']
 
+# 已废弃
 class ExtensionBlockHandler(Handler):
     # 自定义扩展
     # {% note %}
@@ -246,7 +247,7 @@ class HashHeaderHandler(Handler):
         header = match_group.group(2).strip() # 去掉头尾多余空格
         
         # 继续匹配header中的文字
-        block = HashHeaderBlock(level=level,header=header,text=text)
+        block = HashHeaderBlock(level=level,word=header,text=text)
         self.parser.match(block,header)
         root.addBlock(block)
         
@@ -614,26 +615,35 @@ class TextHandler(Handler):
         split_strings = RE.split(text.strip())
 
         count = 0
+        
+        temp_block = ComplexBlock(text=text)
+        
         for string in split_strings:
             # 正常文本字符
             if count % 2 == 0:
                 if string:
-                    root.addBlock(TextBlock(word=string,text=text))
+                    temp_block.addBlock(TextBlock(word=string,text=string))
             else:
                 id = string[3:-3]
                 try:
                     class_object:Block = CONTAINER[id]
                     class_object.restore(TextBlock)
+                    temp_block.input['text'] = temp_block.input['text'].replace(string,class_object.input['text'])
                     root.input['text'] = root.input['text'].replace(string,class_object.input['text'])
-                    root.addBlock(class_object)
+                    temp_block.addBlock(class_object)
                 except:
                     # print(id)
                     # print(CONTAINER)
                     # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
                     # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
                     # 所以做一个try exception,这种情况当成文字处理
-                    root.addBlock(TextBlock(word=string,text=text))
+                    temp_block.addBlock(TextBlock(word=string,text=string))
             count += 1
+            
+        if len(temp_block.sub_blocks) <= 1:
+            root.addBlock(temp_block.sub_blocks[0])
+        else:
+            root.addBlock(temp_block)
         
 class TextBlock(Block):
     
@@ -650,7 +660,7 @@ def buildBlockParser():
     block_parser.register(EmptyBlockHandler(block_parser), 100)
     block_parser.register(SplitBlockHandler(block_parser), 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 90)
-    block_parser.register(ExtensionBlockHandler(block_parser), 85)
+    # block_parser.register(ExtensionBlockHandler(block_parser), 85)
     block_parser.register(HashHeaderHandler(block_parser), 80)
     block_parser.register(TaskListHandler(block_parser), 70)
     block_parser.register(OListHandler(block_parser), 60)
