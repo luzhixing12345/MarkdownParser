@@ -81,7 +81,7 @@ class HTMLLabelHandler(Handler):
             (<div[\s\S]*?>[\s\S]*?<\/div>|         # div
             <span[\s\S]*?>[\s\S]*?<\/span>|        # span
             <p[\s\S]*?>[\s\S]*?<\/p>|            # p
-            <image[\s\S]*?>(?:<\/image>)?|   # image
+            <img[\s\S]*?>(?:<\/img>)?|   # image
             <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
             <br\/?>|
             <kbd>[\s\S]*?</kbd>
