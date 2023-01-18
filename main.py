@@ -1,7 +1,6 @@
 
 import MarkdownParser
 
-
 def main():
     
     html = MarkdownParser.parse('# Hello World')

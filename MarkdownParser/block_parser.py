@@ -429,15 +429,20 @@ class ReferenceHandler(Handler):
         # Markdown All in One  ...
         self.RE = re.compile(r"""(
             \[([^\[\]]*?)\]\((.*?)\)|
-            <((?:[a-zA-z@:\.\/])+?)>
+            <((?:[a-zA-z@:\.\/])+?)>|
+            https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?
         )""",re.VERBOSE)  
 
     def subFunc(self,match:re.Match):
         word = match.group(2)
         url = match.group(3)
-        # <> 的匹配
-        if url == None:
+        
+        if url is None:
+            # <> 的匹配
             url = match.group(4)
+            if url is None:
+                # 裸https的情况
+                url = match.group(1)
             word = url
         ref_block = ReferenceBlock(word=word,url=url,text=match.group())
         replace_name = self.block.register(ref_block) # 注册并替换名字
