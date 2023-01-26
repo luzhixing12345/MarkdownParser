@@ -483,23 +483,19 @@ class SpecialTextHandler(Handler):
         super().__init__(parser)
         self.RE = re.compile(r"""(
             \*{3}(.+?)\*{3}|                           # 粗体+斜体
-            \*{2}_(.+?)_\*{2}|                         # 粗体+斜体
             \*{2}(.+?)\*{2}|                           # 粗体
-            _(.+?)_|                                   # 斜体
             \*(.+?)\*|                                 # 斜体
             ~~(.+?)~~|                                 # 删除线
             ``(.+?)``|                                 # 高亮 
-            `(.+?)`                                   # 高亮                
+            `(.+?)`                                    # 高亮                
         )""", re.VERBOSE)
         self.groupid_tag = {
             2: 'bold+italics',
-            3: 'bold+italics',
-            4: 'bold',
-            5: 'italic',
-            6: 'italic',
-            7: 'delete',
-            8: 'highlight',
-            9: 'highlight'
+            3: 'bold',
+            4: 'italic',
+            5: 'delete',
+            6: 'highlight',
+            7: 'highlight'
         }
 
     def subFunc(self,match:re.Match):
