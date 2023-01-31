@@ -176,7 +176,7 @@ class Handler:
 
     def match(self, text: str, *args):
 
-        if self.RE is not None:
+        if self.RE is None:
             raise NotImplementedError
 
         return bool(self.RE.search(text))
