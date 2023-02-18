@@ -106,6 +106,7 @@ class QuoteBlockMerge(Optimizer):
                 if activite_block is None:
                     activite_block = block
                 else:
+                    activite_block.input['text'] += '\n' + block.input['text']
                     activite_block.sub_blocks.extend(block.sub_blocks)
             else:
                 if activite_block is not None:
@@ -281,7 +282,7 @@ class OListSerialOptimizer(Optimizer):
                 first_number = None
                 new_sub_blocks.append(block)
 
-
+# abort
 class ExtensionOptimizer(Optimizer):
 
     def __init__(self) -> None:

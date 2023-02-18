@@ -128,10 +128,5 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-/markdown
-test.py
 .vscode/
-md-docs/
-index.css
 index.html
-update.py

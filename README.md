@@ -13,7 +13,7 @@ pip install markdownparser
 ```python
 import MarkdownParser
 
-html = MarkdownParser.parse('# Hello World')
+html = MarkdownParser.parse('# Hello World!')
 print(html)
 
 #<div class='markdown-body'><h1>Hello World!</h1></div>
@@ -32,6 +32,21 @@ print(html)
   其中Block类属性见[base_class.py](MarkdownParser/base_class.py),可以通过调用block.info()函数查看树的结构
 
   tree可以通过内部toHTML()方法得到HTML元素
+
+## 测试
+
+您可以使用 `test.py` 测试Markdown解析是否正确
+
+```bash
+python test.py <FILE_NAME>
+
+# python test.py ./testfiles/test1.md
+# python test.py README.md
+```
+
+使用浏览器打开生成的index.html即可与您的Markdown编辑器的渲染结果对比
+
+![20230218202400](https://raw.githubusercontent.com/learner-lu/picbed/master/20230218202400.png)
 
 ## 不支持
 
