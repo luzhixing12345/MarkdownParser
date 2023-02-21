@@ -44,9 +44,31 @@ python test.py <FILE_NAME>
 # python test.py README.md
 ```
 
-使用浏览器打开生成的index.html即可与您的Markdown编辑器的渲染结果对比
+运行会生成index.html, 使用浏览器打开生成的index.html即可与您的Markdown编辑器的预期渲染结果对比
 
 ![20230218202400](https://raw.githubusercontent.com/learner-lu/picbed/master/20230218202400.png)
+
+## 实现思路
+
+[Markdown解析器的代码实现](https://www.bilibili.com/video/BV1LA411X7X3)
+
+您可通过取消 [core.py](./MarkdownParser/core.py) 注释来获取树的结构
+
+```python
+def parse(self, text: str) -> str:
+
+    # 去除空行/注释/html标签
+    lines = self.preprocess_parser(text)
+    # print(lines)
+    # 逐行解析,得到一颗未优化的树
+    root = self.block_parser(lines)
+    # root.info()
+    # 优化,得到正确的markdown解析树
+    tree = self.tree_parser(root)
+    # tree.info()
+    # 输出到屏幕 / 导出html文件
+    return tree.toHTML()
+```
 
 ## 不支持
 

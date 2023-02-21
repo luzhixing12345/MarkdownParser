@@ -446,7 +446,7 @@ class ParagraphOptimizer(Optimizer):
         self.target_block_names = ['TextBlock', 'ComplexBlock', 'ReferenceBlock',
                                    'PictureBlock', 'SpecialTextBlock', 'EscapeCharacterBlock']
         self.interrupt_block_names = ['ParagraphBlock', 'HashHeaderBlock', 'EscapeCharacterBlock',
-                                      'TableBlock', 'HTMLBlock', 'QuoteBlock',
+                                      'TableBlock', 'HTMLBlock',
                                       'ComplexBlock', 'ReferenceBlock', 'PictureBlock',
                                       'SpecialTextBlock', 'AnnotateBlock']
 

@@ -16,3 +16,5 @@ html_template = html_template.replace('html-scope',html)
 
 with open('./index.html','w',encoding='utf-8') as f:
     f.write(html_template)
+    
+print("生成index.html")
