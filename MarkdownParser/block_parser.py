@@ -94,6 +94,35 @@ class EmptyBlock(Block):
         return ''
 
 
+class EscapeCharacterHandler(Handler):
+    # 解释一下这里
+    # 这里的方法名和preprocess_parser中有着同名方法EscapeCharacterHandler
+    # 这里用于处理恢复为纯文本后再处理的情况, 因为预处理阶段优先级较高
+    # 对于类似table的匹配会出现重新恢复文本,分割后再依次匹配的情况
+
+    def __init__(self, parser=None) -> None:
+        super().__init__(parser)
+        self.RE = re.compile(r'\\(.)')
+
+    def subFunc(self, match):
+        global CONTAINER
+        word = match.group(1)
+        block = EscapeCharacterBlock(word=word, text='\\'+word)
+        replace_name = self.block.register(block)  # 注册并替换名字
+        return replace_name
+
+    def __call__(self, root: Block, text: str):
+
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text
+        new_text = re.sub(self.RE, self.subFunc, text)
+        self.parser.match(self.block, new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
+
+
 class EscapeCharacterBlock(Block):
 
     def __init__(self, **kwargs) -> None:
@@ -691,9 +720,9 @@ def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(block_parser), 100)
+    block_parser.register(EscapeCharacterHandler(block_parser), 98)
     block_parser.register(SplitBlockHandler(block_parser), 95)
     block_parser.register(HierarchyIndentHandler(block_parser), 90)
-    # block_parser.register(ExtensionBlockHandler(block_parser), 85)
     block_parser.register(HashHeaderHandler(block_parser), 80)
     block_parser.register(TaskListHandler(block_parser), 70)
     block_parser.register(OListHandler(block_parser), 60)

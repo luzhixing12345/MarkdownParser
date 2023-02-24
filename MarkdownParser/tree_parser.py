@@ -283,6 +283,8 @@ class OListSerialOptimizer(Optimizer):
                 new_sub_blocks.append(block)
 
 # abort
+
+
 class ExtensionOptimizer(Optimizer):
 
     def __init__(self) -> None:
@@ -358,7 +360,7 @@ class TableBlockOptimizer(Optimizer):
         table_header_node = self.block_parser(header)
 
         header_info = [i.input['word'] for i in table_header_node.sub_blocks]
-        table_header_node.input['ifno'] = header_info
+        table_header_node.input['info'] = header_info
         new_table_block = TableBlock(
             header=table_header_node,
             alignments=table_block.input['alignments'],
@@ -368,6 +370,7 @@ class TableBlockOptimizer(Optimizer):
 
     def _addTableItem(self, table_block: TableBlock, table_item_block: Block):
         # 添加表格项,多去少补
+
         table_items = self.RE.split(table_item_block.input['text'])
         if not table_items[0]:
             table_items.pop(0)
@@ -379,6 +382,7 @@ class TableBlockOptimizer(Optimizer):
         else:
             table_items.extend(
                 [' ' for _ in range(table_length-len(table_items))])
+
         for i in range(len(table_items)):
             table_items[i] = table_items[i].strip()
 
@@ -402,8 +406,8 @@ class TableBlockOptimizer(Optimizer):
             block: Block = root.sub_blocks[i]
             # 进入匹配阶段
             if match_table:
-                # 中断匹配
                 if block.block_name not in self.body_block_names:
+                    # 中断匹配
                     match_table = False
                     new_sub_blocks.append(table_block)
                     table_block = None
@@ -417,7 +421,7 @@ class TableBlockOptimizer(Optimizer):
                     # 第二步匹配
                     table_block = self._createTableBlock(
                         root.sub_blocks[i-1], block)
-                    # 匹配成
+                    # 匹配成功
                     if table_block is not None:
                         match_table = True
                         # 把上一项header的TextBlock那一项退出来,已经整合到table_block中了
@@ -520,7 +524,6 @@ def buildTreeParser():
     tree_parser.register(CodeBlockOptimizer(), 90)
     tree_parser.register(HierarchyEliminate(), 85)
     tree_parser.register(OListSerialOptimizer(), 80)
-    # tree_parser.register(ExtensionOptimizer(),70)
     tree_parser.register(TableBlockOptimizer(), 60)
     tree_parser.register(ParagraphOptimizer(), 50)
     tree_parser.register(SpecialTextOptimizer(), 0)

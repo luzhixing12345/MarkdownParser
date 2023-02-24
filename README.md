@@ -117,6 +117,8 @@ def parse(self, text: str) -> str:
   </script>
   ```
 
+  注意,这里仅支持
+
 ## 相关参考
 
 - [Github Markdown CSS](https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css)
