@@ -88,7 +88,21 @@ def parse(self, text: str) -> str:
 
 - 最外层为div包裹,类名为 `markdown-body`
 - 代码段会根据语言加入一个类名便于后期高亮 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
-- 列表嵌套稍有不同,ul/ol+li完全体
+- 如果您想添加对[Mermaid](https://mermaid.js.org/)的支持, 您可参考[mermaid plugin](https://mermaid.js.org/intro/n00b-gettingStarted.html#_2-using-mermaid-plugins)在您的html页面 `<body>` 末尾添加如下 `<script>`
+
+  ```html
+  <script type="module">
+    const codeBlocks = document.querySelectorAll('.language-mermaid');
+    codeBlocks.forEach(codeBlock => {
+        codeBlock.classList.remove('language-mermaid');
+        codeBlock.classList.add('mermaid');
+    });
+    import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.esm.min.mjs';
+    mermaid.initialize({ startOnLoad: true });
+  </script>
+  ```
+
+  > **请注意**, 由于本Markdown解析器的CodeBlock解析得到的类名为 `language-mermaid`, 而mermaid插件支持的类名格式为`mermaid`, 所以代码中手动修改了 `language-mermaid` 的类名
 
 ## 相关参考
 
