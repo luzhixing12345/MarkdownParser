@@ -72,22 +72,20 @@ def parse(self, text: str) -> str:
 
 ## 不支持
 
-- 四个空格变为代码段(不想支持)
-- [^1]的引用方式(不想支持)
-- Latex数学公式(不会支持)
-- Setext 形式的标题(不想支持)
-- 上标 / 下标 / 下划线(不想支持)
-- SpecialTextBlock中叠加使用有可能会有bug(没想好怎么支持)
-- TOC与锚点(暂不支持)
+- 四个空格变为代码段
+- [^1]的引用方式
+- Setext 形式的标题
+- 上标 / 下标 / 下划线
+- TOC与锚点
 
   锚点的添加通常和目录的跳转有关,而目录树的生成可以考虑解析tree的根Block的所有子HashHeaderBlock来构建.
   
   因为跳转的功能是js实现,锚点id的加入也会影响html结构,所以暂不支持
 
-## 其他特性
+## 补充说明
 
-- 最外层为div包裹,类名为 `markdown-body`
-- 代码段会根据语言加入一个类名便于后期高亮 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
+- 生成的结果如下 `<div class='markdown-body'>markdown内容</div>`
+- 代码段会根据语言加入一个类名便于后期高亮,例如 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
 - 如果您想添加对[Mermaid](https://mermaid.js.org/)的支持, 您可参考[mermaid plugin](https://mermaid.js.org/intro/n00b-gettingStarted.html#_2-using-mermaid-plugins)在您的html页面 `<body>` 末尾添加如下 `<script>`
 
   ```html
@@ -104,7 +102,23 @@ def parse(self, text: str) -> str:
 
   > **请注意**, 由于本Markdown解析器的CodeBlock解析得到的类名为 `language-mermaid`, 而mermaid插件支持的类名格式为`mermaid`, 所以代码中手动修改了 `language-mermaid` 的类名
 
+- 如果您想添加对Latex数学公式的支持, 可以在html页面 `<body>` 末尾添加如下 `<script>`
+
+  ```html
+  <script>
+      MathJax = {
+        tex: {
+          inlineMath: [['$', '$'], ['\\(', '\\)']]
+        }
+      };
+      </script>
+  <script id="MathJax-script" async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml.js">
+  </script>
+  ```
+
 ## 相关参考
 
 - [Github Markdown CSS](https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css)
 - [Mermaid API](https://mermaid.js.org/intro/#mermaid-api)
+- [MathJax](https://docs.mathjax.org/en/latest/web/start.html)
