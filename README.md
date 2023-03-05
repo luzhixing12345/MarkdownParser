@@ -91,6 +91,7 @@ def parse(self, text: str) -> str:
   ```css
   .markdown-body > ul:has(input) {
     padding-left: 0;
+    margin-bottom: 0;
   }
 
   .markdown-body  ul:has(input) {
