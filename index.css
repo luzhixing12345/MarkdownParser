@@ -229,3 +229,12 @@ blockquote {
   font-weight: 600;
   line-height: 1.25;
 }
+
+.markdown-body > ul:has(input) {
+
+    padding-left: 0;
+}
+
+.markdown-body  ul:has(input) {
+    list-style-type: none;
+}

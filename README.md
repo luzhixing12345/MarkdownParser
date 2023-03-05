@@ -86,6 +86,18 @@ def parse(self, text: str) -> str:
 
 - 生成的结果如下 `<div class='markdown-body'>markdown内容</div>`
 - 代码段会根据语言加入一个类名便于后期高亮,例如 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
+- 默认导出的HTML中层级任务列表会有显示问题,这是因为使用了ul+li+checkbox的方式,您需要添加以下css样式修正
+
+  ```css
+  .markdown-body > ul:has(input) {
+    padding-left: 0;
+  }
+
+  .markdown-body  ul:has(input) {
+      list-style-type: none;
+  }
+  ```
+
 - 如果您想添加对[Mermaid](https://mermaid.js.org/)的支持, 您可参考[mermaid plugin](https://mermaid.js.org/intro/n00b-gettingStarted.html#_2-using-mermaid-plugins)在您的html页面 `<body>` 末尾添加如下 `<script>`
 
   ```html

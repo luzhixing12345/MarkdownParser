@@ -25,7 +25,7 @@ class BlockParser(Parser):
 
         for method in self._handlers:
             if method['object'].match(text):
-                # print('[',text,']',method['name'] + ' matched')
+                # print(method['object'].__class__.__name__,'matched')
                 method['object'](root, text)
                 return
             else:
@@ -308,17 +308,26 @@ class TaskListHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^[-+\*] \[([ x])\] (.*)')
+        self.RE = re.compile(r'(?<=^[-+\*] )\[([ x])\] (.*)')
+
+    def subFunc(self, match: re.Match):
+        is_complete = match.group(1)
+        word = match.group(2)
+
+        task_block = TaskListBlock(complete=is_complete, word=word, text=match.group())
+        replace_name = self.block.register(task_block)  # 注册并替换名字
+        return replace_name
 
     def __call__(self, root: Block, text: str):
-
-        match_group = re.match(self.RE, text)
-        is_complete = match_group.group(1)
-        word = match_group.group(2)
-
-        block = TaskListBlock(complete=is_complete, word=word, text=text)
-        self.parser.match(block, word)
-        root.addBlock(block)
+        
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text
+        new_text = re.sub(self.RE, self.subFunc, text)
+        self.parser.match(self.block, new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
 
 
 class TaskListBlock(Block):
