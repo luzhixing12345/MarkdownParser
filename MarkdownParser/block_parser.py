@@ -618,7 +618,7 @@ class TableHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^\|?(?: *:?-{1,}:? *\|?)+')  # 判断表格出现
+        self.RE = re.compile(r'^\|(?: *:?-{1,}:? *\|)+')  # 判断表格出现
 
     def __call__(self, root: Block, text: str):
         # 判断对齐方式
