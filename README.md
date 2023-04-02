@@ -89,13 +89,14 @@ def parse(self, text: str) -> str:
 - 默认导出的HTML中层级任务列表会有显示问题,这是因为使用了ul+li+checkbox的方式,您需要添加以下css样式修正
 
   ```css
-  .markdown-body > ul:has(input) {
+  .markdown-body > ul>li:has(input) {
     padding-left: 0;
     margin-bottom: 0;
   }
 
-  .markdown-body  ul:has(input) {
-      list-style-type: none;
+  .markdown-body  ul>li:has(input)>ul {
+    list-style-type: none;
+    padding-left: 8px;
   }
   ```
 
