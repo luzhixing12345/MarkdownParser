@@ -14,7 +14,7 @@ class Container:
         self._counter = 0
         self.__str__ = self.__repr__
 
-    def __repr__(self) -> str:
+    def __repr__(self) -> str: # pragma: no cover
 
         split_line = '-' * 50 + '\n'
         info = f'Total number: {self._counter}\n\n'
@@ -50,16 +50,11 @@ class Parser:
         # 按照优先级从高到低排序,使得解析时依次调用方法
         self._handlers.sort(key=lambda item: item['priority'], reverse=True)
 
-    def __call__(self, *args, **kwargs):
+    def __call__(self, *args, **kwargs): # pragma: no cover
 
         raise NotImplementedError
 
-    def __getitem__(self, key):
-        for method in self._handlers:
-            if method['name'] == key:
-                return method['object']
-
-    def info(self):
+    def info(self): # pragma: no cover
         # 查看所有已注册的方法
         if not self.is_sorted:
             self._sort()
@@ -119,7 +114,7 @@ class Block:
 
         self.sub_blocks.append(block)
 
-    def __str__(self):
+    def __str__(self): # pragma: no cover
 
         if not self.input:
             return ''
@@ -134,7 +129,7 @@ class Block:
             output = output[:-3] + ' >'
         return output
 
-    def info(self, deep: int = 0):
+    def info(self, deep: int = 0): # pragma: no cover
         # root.info()
         # 递归输出信息
 
@@ -146,7 +141,7 @@ class Block:
                 print(f'[{block.__class__.__name__}] {str(block)}')
                 block.info(deep+1)
 
-    def printInfo(self, deep: int = 0) -> str:
+    def printInfo(self, deep: int = 0) -> str: # pragma: no cover
         # print(root.printInfo())
         # 递归输出信息
         output_str = ''
@@ -174,14 +169,14 @@ class Handler:
         self.RE = None
         self.parser: Parser = parser
 
-    def match(self, text: str, *args):
+    def match(self, text: str, *args): # pragma: no cover
 
         if self.RE is None:
             raise NotImplementedError
 
         return bool(self.RE.search(text))
 
-    def __call__(self, root: Block, text: str):
+    def __call__(self, root: Block, text: str): # pragma: no cover
 
         raise NotImplementedError
 
@@ -194,6 +189,6 @@ class Optimizer:
         self.target_block_names = []
         self.is_match = False
 
-    def __call__(self, root: Block):
+    def __call__(self, root: Block): # pragma: no cover
 
         raise NotImplementedError

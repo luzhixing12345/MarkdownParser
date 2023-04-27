@@ -1,20 +1,17 @@
 
+
 import MarkdownParser
-import sys
+import unittest
 
-# usage:
-# python test.py <FILE_NAME>
-#
-# python test.py ./testfiles/test1.md
+class TestMyMdParser(unittest.TestCase):
 
-html = MarkdownParser.parseFile(sys.argv[1])
-
-with open('./template.html','r',encoding='utf-8') as f:
-    html_template = f.read()
-    
-html_template = html_template.replace('html-scope',html)
-
-with open('./index.html','w',encoding='utf-8') as f:
-    f.write(html_template)
-    
-print("生成index.html")
+    def test_parse_heading(self):
+        MarkdownParser.parse("")
+        MarkdownParser.parse("# Heading")
+        MarkdownParser.parseFile("./testfiles/test1.md")
+        MarkdownParser.parseFile("./testfiles/test2.md")
+        MarkdownParser.parseFile("./testfiles/test3.md")
+        MarkdownParser.parseFile("./testfiles/test4.md")
+        MarkdownParser.parseFile("./testfiles/test5.md")
+        MarkdownParser.parseFile("./testfiles/test6.md")
+        MarkdownParser.parseFile("./testfiles/test7.md")

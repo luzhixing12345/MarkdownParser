@@ -20,9 +20,6 @@ class PreprocessParser(Parser):
         lines = data.split('\n')
         return lines
 
-    def getHtmlPosition(self):
-        return self.preprocess_parser['html'].match_results
-
 
 class TabHandler(Handler):
 

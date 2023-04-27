@@ -233,10 +233,8 @@ class HierarchyEliminate(Optimizer):
                 # EmptyBlock 先补齐在 UList OListBlock 下
                 if block.block_name == 'EmptyBlock':
                     if deeper_indent:
-                        if len(activite_block.sub_blocks) == 0:
-                            activite_block.addBlock(block)
                         # 忽略连续的EmptyBlock
-                        elif activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
+                        if activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
                             activite_block.addBlock(block)
                     else:
                         if len(new_sub_blocks) > 1 and new_sub_blocks[-1].block_name == 'EmptyBlock':
@@ -285,7 +283,7 @@ class OListSerialOptimizer(Optimizer):
 # abort
 
 
-class ExtensionOptimizer(Optimizer):
+class ExtensionOptimizer(Optimizer): # pragma: no cover
 
     def __init__(self) -> None:
         super().__init__()
@@ -432,6 +430,8 @@ class TableBlockOptimizer(Optimizer):
                             TextBlock(text=block.input['text'], word=block.input['text']))
                         match_table = False
                 else:
+                    # 第一步匹配失败则将 block 回退为 TextBlock
+                    block = TextBlock(text=block.input['text'], word=block.input['text'])
                     new_sub_blocks.append(block)
             else:
                 new_sub_blocks.append(block)

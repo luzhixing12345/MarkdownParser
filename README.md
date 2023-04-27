@@ -35,18 +35,23 @@ print(html)
 
 ## 测试
 
-您可以使用 `test.py` 测试Markdown解析是否正确
-
 ```bash
-python test.py <FILE_NAME>
+python generate.py <FILE_NAME>
 
-# python test.py ./testfiles/test1.md
-# python test.py README.md
+# python generate.py ./testfiles/test1.md
+# python generate.py README.md
 ```
 
 运行会生成index.html, 使用浏览器打开生成的index.html即可与您的Markdown编辑器的预期渲染结果对比
 
 ![20230218202400](https://raw.githubusercontent.com/learner-lu/picbed/master/20230218202400.png)
+
+代码覆盖率
+
+```bash
+coverage run -m unittest
+coverage html
+```
 
 ## 实现思路
 
