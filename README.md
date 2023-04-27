@@ -1,5 +1,7 @@
 # MarkdownParser
 
+[![codecov](https://codecov.io/gh/luzhixing12345/MarkdownParser/branch/main/graph/badge.svg?)](https://codecov.io/gh/luzhixing12345/MarkdownParser)
+
 MarkdownParser 是一个 Markdown 语法解析器,用于实现md到html标签的转换
 
 ## 安装
