@@ -27,7 +27,6 @@ jobs:
     - name: Run tests with coverage
       run: |
         coverage run -m unittest
-        coverage combine
         coverage xml -i
 
     - name: Upload coverage report to Codecov
