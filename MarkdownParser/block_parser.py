@@ -34,7 +34,7 @@ class ComplexBlock(Block):
     # 用于处理复杂嵌套
 
     def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs) # pragma: no cover
+        super().__init__(**kwargs)  # pragma: no cover
 
     def toHTML(self):
 
@@ -48,10 +48,10 @@ class ComplexBlock(Block):
 class HTMLBlock(Block):
     # 处理HTML标签
     def __init__(self, **kwargs) -> None:
-        super().__init__(**kwargs) # pragma: no cover
+        super().__init__(**kwargs)  # pragma: no cover
 
     def __str__(self):
-        return '<html>' # pragma: no cover
+        return '<html>'  # pragma: no cover
 
     def toHTML(self):
         return self.input['text']
@@ -63,7 +63,7 @@ class AnnotateBlock(Block):
         super().__init__(**kwargs)
 
     def __str__(self):
-        return '<!-->' # pragma: no cover
+        return '<!-->'  # pragma: no cover
 
     def toHTML(self):
         return ''
@@ -131,7 +131,7 @@ class EscapeCharacterBlock(Block):
 # 已废弃
 
 
-class ExtensionBlockHandler(Handler): # pragma: no cover
+class ExtensionBlockHandler(Handler):  # pragma: no cover
     # 自定义扩展
     # {% note %}
     # asdklja
@@ -165,7 +165,7 @@ class ExtensionBlockHandler(Handler): # pragma: no cover
         root.addBlock(self.block)
 
 
-class ExtensionBlock(Block): # pragma: no cover
+class ExtensionBlock(Block):  # pragma: no cover
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -194,7 +194,7 @@ class SplitBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def __str__(self): # pragma: no cover
+    def __str__(self):  # pragma: no cover
         return '---<hr>---'
 
     def toHTML(self):
@@ -217,9 +217,13 @@ class HierarchyIndentHandler(Handler):
         space_number = len(match_group.group(1))
         word = match_group.group(2)
 
-        block = HierarchyBlock(space_number=space_number, text=text)
-        self.parser.match(block, word)
-        root.addBlock(block)
+        self.block = HierarchyBlock(space_number=space_number, text=text)
+        self.parser.match(self.block, word)
+        # 因为多重 Complex 传递的问题导致的 escape 字符的bug(test8.md)
+        # 暂时没有更好的修改方法...
+        if len(self.block.sub_blocks) == 1:
+            self.block.input['text'] = ' ' * space_number + self.block.sub_blocks[0].input['text']
+        root.addBlock(self.block)
 
 
 class HierarchyBlock(Block):
@@ -311,12 +315,13 @@ class TaskListHandler(Handler):
         is_complete = match.group(1)
         word = match.group(2)
 
-        task_block = TaskListBlock(complete=is_complete, word=word, text=match.group())
+        task_block = TaskListBlock(
+            complete=is_complete, word=word, text=match.group())
         replace_name = self.block.register(task_block)  # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
-        
+
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -682,7 +687,6 @@ class TextHandler(Handler):
         split_strings = RE.split(text.strip())
 
         count = 0
-
         temp_block = ComplexBlock(text=text)
 
         for string in split_strings:
@@ -693,17 +697,19 @@ class TextHandler(Handler):
             else:
                 id = string[3:-3]
                 class_object: Block = CONTAINER[id]
+                replace_str = class_object.input['text']
                 if class_object is not None:
                     class_object.restore(TextBlock)
                     temp_block.input['text'] = temp_block.input['text'].replace(
-                        string, class_object.input['text'])
+                        string, replace_str)
                     root.input['text'] = root.input['text'].replace(
-                        string, class_object.input['text'])
+                        string, replace_str)
                     temp_block.addBlock(class_object)
                 else:
                     # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
                     # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
-                    temp_block.addBlock(TextBlock(word=string, text=string)) # pragma: no cover
+                    temp_block.addBlock(
+                        TextBlock(word=string, text=string))  # pragma: no cover
             count += 1
 
         if len(temp_block.sub_blocks) <= 1:

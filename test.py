@@ -3,6 +3,7 @@
 import MarkdownParser
 import unittest
 
+
 class TestMyMdParser(unittest.TestCase):
 
     def test_parse_heading(self):
@@ -15,3 +16,4 @@ class TestMyMdParser(unittest.TestCase):
         MarkdownParser.parseFile("./testfiles/test5.md")
         MarkdownParser.parseFile("./testfiles/test6.md")
         MarkdownParser.parseFile("./testfiles/test7.md")
+        MarkdownParser.parseFile("./testfiles/test8.md")

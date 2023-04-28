@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "MarkdownParser"
-version = "0.3.8"
+version = "0.3.10"
 description = ""
 authors = ["luzhixing12345 <luzhixing12345@163.com>"]
 license = "MIT"

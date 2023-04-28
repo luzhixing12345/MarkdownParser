@@ -283,7 +283,7 @@ class OListSerialOptimizer(Optimizer):
 # abort
 
 
-class ExtensionOptimizer(Optimizer): # pragma: no cover
+class ExtensionOptimizer(Optimizer):  # pragma: no cover
 
     def __init__(self) -> None:
         super().__init__()
@@ -431,7 +431,8 @@ class TableBlockOptimizer(Optimizer):
                         match_table = False
                 else:
                     # 第一步匹配失败则将 block 回退为 TextBlock
-                    block = TextBlock(text=block.input['text'], word=block.input['text'])
+                    block = TextBlock(
+                        text=block.input['text'], word=block.input['text'])
                     new_sub_blocks.append(block)
             else:
                 new_sub_blocks.append(block)
