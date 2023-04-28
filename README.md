@@ -107,7 +107,7 @@ def parse(self, text: str) -> str:
   }
   ```
 
-- 您可以使用 `parse_withtag` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-nagivater">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
+- 您可以使用 `parse_withtag` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-navigator">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
 
   ```js
   let links = document.querySelectorAll('div a[href^="#"]');
@@ -123,7 +123,7 @@ def parse(self, text: str) -> str:
   以及一些样式美化
 
   ```css
-  .header-nagivater {
+  .header-navigator {
     position: fixed;
   }
   ```

@@ -28,7 +28,7 @@ class Markdown:
         # tree.info()
         # 输出到屏幕 / 导出html文件
         return tree.toHTML()
-    
+
     def parse_with_tag(self, text: str):
 
         # 去除空行/注释/html标签
@@ -44,10 +44,10 @@ class Markdown:
         return tree.toHTML(header_navigater)
 
     def get_header_list(self, tree):
-        
+
         UID = 0
         H0_block = []
-        activate_block = None # 激活节点
+        activate_block = None  # 激活节点
         activate_block_level = 0
         for block in tree.sub_blocks:
             # 对所有 HashHeaderBlock 统计树结构
@@ -112,33 +112,33 @@ class Markdown:
                             activate_block.child_blocks.append(block)
                             block.parent_block = activate_block
                             activate_block_level = activate_block.input['level']
-       
-        return self.get_header_nagivater(H0_block)
 
+        return self.get_header_navigator(H0_block)
 
-    def get_header_nagivater(self, H0_block):
-        
-        nagivater_html = ''
+    def get_header_navigator(self, H0_block):
+
+        navigator_html = ''
         for block in H0_block:
-            nagivater_html += self._get_header_nagivater(block)
-        nagivater_html = f'<div class=\"header-nagivater\">{nagivater_html}</div>'
-        return nagivater_html
-    
-    def _get_header_nagivater(self, block):
+            navigator_html += self._get_header_navigator(block)
+        navigator_html = f'<div class=\"header-navigator\">{navigator_html}</div>'
+        return navigator_html
 
-        nagivater_html = ''
+    def _get_header_navigator(self, block):
+
+        navigator_html = ''
         level = block.input['level']
         tag = f'h{str(level)}-{str(block.UID)}'
         word = block.to_href()
         if len(block.child_blocks) == 0:
-            nagivater_html = f'<ul><li><a href=\"#{tag}\">{word}</a></li></ul>'
+            navigator_html = f'<ul><li><a href=\"#{tag}\">{word}</a></li></ul>'
         else:
-            sub_nagivater_html = ''
+            sub_navigator_html = ''
             for cblock in block.child_blocks:
-                sub_nagivater_html += self._get_header_nagivater(cblock)
-            nagivater_html = f'<ul><li><a href=\"#{tag}\">{word}</a>{sub_nagivater_html}</li></ul>'
+                sub_navigator_html += self._get_header_navigator(cblock)
+            navigator_html = f'<ul><li><a href=\"#{tag}\">{word}</a>{sub_navigator_html}</li></ul>'
 
-        return nagivater_html
+        return navigator_html
+
 
 def parse(text: str) -> str:
 
@@ -158,6 +158,7 @@ def parseFile(file_name: str) -> str:
         text = f.read()
 
     return parse(text)
+
 
 def parse_withtag(text: str) -> str:
 
