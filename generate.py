@@ -5,8 +5,8 @@ import sys
 # python test.py <FILE_NAME>
 #
 # python test.py ./testfiles/test1.md
-
-html = MarkdownParser.parseFile(sys.argv[1])
+# html = MarkdownParser.parseFile(sys.argv[1])
+html = MarkdownParser.parseFile_withtag(sys.argv[1])
 
 with open('./template.html', 'r', encoding='utf-8') as f:
     html_template = f.read()
@@ -17,3 +17,4 @@ with open('./index.html', 'w', encoding='utf-8') as f:
     f.write(html_template)
 
 print("save in index.html")
+

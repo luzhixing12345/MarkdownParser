@@ -81,7 +81,6 @@ class Block:
         self.input['text']: str  # 输入的纯文本,用于恢复原始信息
         self.input['word']: str  # 解析提取后的核心文本信息
         self.sub_blocks = []   # 子模块
-        self.parent_block = None  # 父模块
         self.block_name = self.__class__.__name__
 
     def register(self, class_object):
@@ -121,8 +120,8 @@ class Block:
             return ''
         output = '< '
         for k, v in self.input.items():
-            # if k == 'text':
-            #     continue
+            if k == 'text':
+                continue
             output += f'{k} = \"{v}\" | '
         if output == '< ':
             output = ''
@@ -155,12 +154,15 @@ class Block:
                 output_str += block.printInfo(deep+1)
             return output_str
 
-    def toHTML(self):
+    def toHTML(self, header_navigater=None):
         # 转换成HTML格式
         content = ''
         for block in self.sub_blocks:
             content += block.toHTML()
-        return f"<div class='markdown-body'>{content}</div>"
+        if header_navigater:
+            return f"{header_navigater}<div class='markdown-body'>{content}</div>"
+        else:
+            return f"<div class='markdown-body'>{content}</div>"
 
 
 class Handler:

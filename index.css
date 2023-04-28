@@ -88,3 +88,7 @@ a:hover {
   background-color: initial;
   border: 0;
 }
+
+.header-nagivater {
+    position: fixed;
+}

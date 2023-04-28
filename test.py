@@ -17,3 +17,6 @@ class TestMyMdParser(unittest.TestCase):
         MarkdownParser.parseFile("./testfiles/test6.md")
         MarkdownParser.parseFile("./testfiles/test7.md")
         MarkdownParser.parseFile("./testfiles/test8.md")
+        MarkdownParser.parse_withtag("")
+        MarkdownParser.parseFile_withtag("./testfiles/test9.md")
+        MarkdownParser.parseFile_withtag("./testfiles/test10.md")

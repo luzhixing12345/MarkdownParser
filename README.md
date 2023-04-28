@@ -21,19 +21,22 @@ print(html)
 #<div class='markdown-body'><h1>Hello World!</h1></div>
 ```
 
-其他接口函数
+接口函数
 
-- `parseFile(file_name:str)->str`: 解析文件
+```python
+# 解析markdown text
+def parse(text: str) -> str:
 
-接口类
+# 解析markdown 文件
+def parseFile(file_name: str) -> str:
 
-- `Markdown`
+# 见下方补充说明
+def parse_withtag(text: str) -> str:
 
-  使用类创建对象后可以利用 `self.preprocess_parser` `self.block_parser` `self.tree_parser` 控制解析过程
+def parseFile_withtag(file_name: str) -> str:
+```
 
-  其中Block类属性见[base_class.py](MarkdownParser/base_class.py),可以通过调用block.info()函数查看树的结构
-
-  tree可以通过内部toHTML()方法得到HTML元素
+第二个参数为可选项, `has_tag` 表示是否将
 
 ## 测试
 
@@ -51,6 +54,8 @@ python generate.py <FILE_NAME>
 代码覆盖率
 
 ```bash
+pip install coverage
+
 coverage run -m unittest
 coverage html
 ```
@@ -83,11 +88,6 @@ def parse(self, text: str) -> str:
 - [^1]的引用方式
 - Setext 形式的标题
 - 上标 / 下标 / 下划线
-- TOC与锚点
-
-  锚点的添加通常和目录的跳转有关,而目录树的生成可以考虑解析tree的根Block的所有子HashHeaderBlock来构建.
-  
-  因为跳转的功能是js实现,锚点id的加入也会影响html结构,所以暂不支持
 
 ## 补充说明
 
@@ -104,6 +104,27 @@ def parse(self, text: str) -> str:
   .markdown-body  ul>li:has(input)>ul {
     list-style-type: none;
     padding-left: 8px;
+  }
+  ```
+
+- 您可以使用 `parse_withtag` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-nagivater">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
+
+  ```js
+  let links = document.querySelectorAll('div a[href^="#"]');
+    links.forEach(link => {
+      link.addEventListener('click', function(event) {
+        event.preventDefault();
+        let target = document.querySelector(this.getAttribute('href'));
+        target.scrollIntoView({ behavior: 'smooth' });
+      });
+    });
+  ```
+
+  以及一些样式美化
+
+  ```css
+  .header-nagivater {
+    position: fixed;
   }
   ```
 
@@ -138,7 +159,8 @@ def parse(self, text: str) -> str:
   </script>
   ```
 
-  注意,这里仅支持
+  注意,这里仅支持很少一部分数学公式
+
 
 ## 相关参考
 

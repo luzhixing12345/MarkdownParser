@@ -298,12 +298,32 @@ class HashHeaderBlock(Block):
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.child_blocks = []
+        self.parent_block = None
+        self.UID = None
 
     def toHTML(self):
-
-        tag = 'h' + str(self.input['level'])
-        return f'<{tag}>{self.sub_blocks[0].toHTML()}</{tag}>'
-
+        
+        head_level = str(self.input['level'])
+        tag = f'h{head_level}'
+        if self.UID is not None:
+            tag_id = f'id=\"{tag}-{str(self.UID)}\"'
+        else:
+            tag_id = ''
+        return f'<{tag} {tag_id}>{self.sub_blocks[0].toHTML()}</{tag}>'
+    
+    def to_href(self):
+        '''
+        纯文字形式
+        '''
+        word = ''
+        if self.sub_blocks[0].block_name == "ComplexBlock":
+            block = self.sub_blocks[0]
+            for sblock in block.sub_blocks:
+                word += sblock.input['word']
+        else:
+            word = self.sub_blocks[0].input['word']
+        return word
 
 class TaskListHandler(Handler):
 
