@@ -111,7 +111,8 @@ class Markdown:
                             UID += 1
                             activate_block.child_blocks.append(block)
                             block.parent_block = activate_block
-                            activate_block_level = activate_block.input['level']
+                            activate_block = block
+                            activate_block_level = current_head_level
 
         return self.get_header_navigator(H0_block)
 

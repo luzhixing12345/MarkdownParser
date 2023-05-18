@@ -20,3 +20,4 @@ class TestMyMdParser(unittest.TestCase):
         MarkdownParser.parse_withtag("")
         MarkdownParser.parseFile_withtag("./testfiles/test9.md")
         MarkdownParser.parseFile_withtag("./testfiles/test10.md")
+        MarkdownParser.parseFile_withtag("./testfiles/test11.md")
