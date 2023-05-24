@@ -514,7 +514,7 @@ class ReferenceHandler(Handler):
         # Typora               r'\[([^\[\]]*?)\]\((.*?)\)'
         # Markdown All in One  ...
         self.RE = re.compile(r"""(
-            \[([^\[\]]*?)\]\((.*?)\)|
+            \[(.*?)\]\((.*?)\)|
             <((?:[a-zA-z@:\.\/])+?)>|
             https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?
         )""", re.VERBOSE)
