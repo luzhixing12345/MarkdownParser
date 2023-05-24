@@ -1,7 +1,7 @@
 
 import re
 from .base_class import Parser, Optimizer, Block
-from .block_parser import TableBlock, buildBlockParser, TextBlock
+from .block_parser import TableBlock, BlockParser, TextBlock, EmptyBlockHandler, EscapeCharacterHandler, PictureHandler, ReferenceHandler, SpecialTextHandler, TableHandler, TextHandler
 
 
 class TreeParser(Parser):
@@ -331,7 +331,15 @@ class TableBlockOptimizer(Optimizer):
     def __init__(self) -> None:
         super().__init__()
         self.RE = re.compile(r'(?<!\\)\|')
-        self.block_parser = buildBlockParser()  # 初始化一个block parser 用于解析表格中出现的每一个表项
+        self.block_parser = BlockParser()  # 初始化一个block parser 用于解析表格中出现的每一个表项, 
+        # 只注册下面这些 Handler, 不解析其他的
+        self.block_parser.register(EmptyBlockHandler(self.block_parser), 100)
+        self.block_parser.register(EscapeCharacterHandler(self.block_parser), 98)
+        self.block_parser.register(PictureHandler(self.block_parser), 15)
+        self.block_parser.register(ReferenceHandler(self.block_parser), 10)
+        self.block_parser.register(SpecialTextHandler(self.block_parser), 5)
+        self.block_parser.register(TableHandler(self.block_parser), 4)
+        self.block_parser.register(TextHandler(self.block_parser), 0)
         # 匹配的
         self.table_block_names = ['TableBlock']
 
