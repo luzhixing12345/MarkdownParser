@@ -1,2 +1,2 @@
-from .core import parse, parseFile, parse_withtag, parseFile_withtag
+from .core import parse, parse_file, parse_toc, parse_file_toc
 from .core import Markdown

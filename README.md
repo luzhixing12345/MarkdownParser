@@ -24,16 +24,17 @@ print(html)
 接口函数
 
 ```python
-# 解析markdown text
+# 解析 markdown 文本转 html
 def parse(text: str) -> str:
 
-# 解析markdown 文件
-def parseFile(file_name: str) -> str:
+# 解析 md 文件转 html
+def parse_file(file_name: str) -> str:
 
-# 见下方补充说明
-def parse_withtag(text: str) -> str:
+# 解析 markdown 文本, 带目录树
+def parse_toc(text: str) -> str:
 
-def parseFile_withtag(file_name: str) -> str:
+# 解析 md 文件, 带目录树
+def parse_file_toc(file_name: str) -> str:
 ```
 
 第二个参数为可选项, `has_tag` 表示是否将
@@ -107,7 +108,7 @@ def parse(self, text: str) -> str:
   }
   ```
 
-- 您可以使用 `parse_withtag` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-navigator">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
+- 您可以使用 `parse_toc` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-navigator">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
 
   ```js
   let links = document.querySelectorAll('div a[href^="#"]');

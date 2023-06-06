@@ -141,8 +141,10 @@ class Markdown:
         return navigator_html
 
 
-def parse(text: str) -> str:
-
+def parse(text: str, ) -> str:
+    '''
+    解析 markdown 文本转 html
+    '''
     assert type(text) == str, "输入应为字符串"
 
     # 空输入
@@ -153,16 +155,20 @@ def parse(text: str) -> str:
     return md.parse(text)
 
 
-def parseFile(file_name: str) -> str:
-
+def parse_file(file_name: str) -> str:
+    '''
+    解析 md 文件转 html
+    '''
     with open(file_name, 'r', encoding='utf-8') as f:
         text = f.read()
 
     return parse(text)
 
 
-def parse_withtag(text: str) -> str:
-
+def parse_toc(text: str) -> str:
+    '''
+    解析 markdown 文本, 带目录树
+    '''
     assert type(text) == str, "输入应为字符串"
 
     # 空输入
@@ -173,9 +179,11 @@ def parse_withtag(text: str) -> str:
     return md.parse_with_tag(text)
 
 
-def parseFile_withtag(file_name: str) -> str:
-
+def parse_file_toc(file_name: str) -> str:
+    '''
+    解析 md 文件, 带目录树
+    '''
     with open(file_name, 'r', encoding='utf-8') as f:
         text = f.read()
 
-    return parse_withtag(text)
+    return parse_toc(text)
