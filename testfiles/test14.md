@@ -13,3 +13,7 @@ https://www.baidu.com
 123https://www.baidu.com123
 
 \r \n \t
+
+对于标识符来说类型是 TK_NAME, 比如名为 test_name 的token表示为 <TK_NAME, "test_name">
+
+对于标识符来说类型是 TK_NAME, 比如名为 test_name 的token表示为 <TK_NAME,"test_name">

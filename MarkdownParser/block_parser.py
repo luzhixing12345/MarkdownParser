@@ -747,8 +747,7 @@ class TextBlock(Block):
 
         # fix bug: 修复一些 <abc> 这种虽然不匹配网址, 但是会被 html 解析为标签的情况
         # 见 test14.md
-        RE = re.compile(r'<([A-Za-z][^ ]*)>')
-        self.input['word'] = re.sub(RE,r'&lt\1&gt', self.input['word'])
+        self.input['word'] = self.input['word'].replace('<','&lt').replace('>','&gt')
 
         return self.input['word']
 

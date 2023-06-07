@@ -37,8 +37,6 @@ def parse_toc(text: str) -> str:
 def parse_file_toc(file_name: str) -> str:
 ```
 
-第二个参数为可选项, `has_tag` 表示是否将
-
 ## 测试
 
 ```bash
