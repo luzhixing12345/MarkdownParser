@@ -515,8 +515,8 @@ class ReferenceHandler(Handler):
         # Markdown All in One  ...
         self.RE = re.compile(r"""(
             \[(.*?)\]\((.*?)\)|
-            <((?:[a-zA-z@:\.\/])+?)>|
-            https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?
+            <(https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?)>|
+            \bhttps?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?\b
         )""", re.VERBOSE)
 
     def subFunc(self, match: re.Match):
@@ -744,6 +744,11 @@ class TextBlock(Block):
         super().__init__(**kwargs)
 
     def toHTML(self):
+
+        # fix bug: 修复一些 <abc> 这种虽然不匹配网址, 但是会被 html 解析为标签的情况
+        # 见 test14.md
+        RE = re.compile(r'<([A-Za-z][^ ]*)>')
+        self.input['word'] = re.sub(RE,r'&lt\1&gt', self.input['word'])
 
         return self.input['word']
 
