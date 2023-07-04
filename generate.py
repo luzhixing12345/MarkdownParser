@@ -2,9 +2,9 @@ import MarkdownParser
 import sys
 
 # usage:
-# python test.py <FILE_NAME>
+# python generate.py <FILE_NAME>
 #
-# python test.py ./testfiles/test1.md
+# python generate.py ./testfiles/test1.md
 # html = MarkdownParser.parse_file(sys.argv[1])
 html = MarkdownParser.parse_file(sys.argv[1])
 

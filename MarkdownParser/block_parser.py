@@ -1,17 +1,14 @@
-
 from .base_class import Parser, Handler, Block, CONTAINER
 from typing import List
 import re
 
 
 class BlockParser(Parser):
-
     def __init__(self) -> None:
         super().__init__()
 
     def __call__(self, lines: List[str]):
-
-        self.root = Block(text='')
+        self.root = Block(text="")
         if not self.is_sorted:
             self._sort()
             self.is_sorted = True
@@ -22,11 +19,10 @@ class BlockParser(Parser):
         return self.root
 
     def match(self, root: Block, text: str):
-
         for method in self._handlers:
-            if method['object'].match(text):
+            if method["object"].match(text):
                 # print(method['object'].__class__.__name__,'matched')
-                method['object'](root, text)
+                method["object"](root, text)
                 return
 
 
@@ -37,8 +33,7 @@ class ComplexBlock(Block):
         super().__init__(**kwargs)  # pragma: no cover
 
     def toHTML(self):
-
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
 
@@ -51,22 +46,21 @@ class HTMLBlock(Block):
         super().__init__(**kwargs)  # pragma: no cover
 
     def __str__(self):
-        return '<html>'  # pragma: no cover
+        return "<html>"  # pragma: no cover
 
     def toHTML(self):
-        return self.input['text']
+        return self.input["text"]
 
 
 class AnnotateBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def __str__(self):
-        return '<!-->'  # pragma: no cover
+        return "<!-->"  # pragma: no cover
 
     def toHTML(self):
-        return ''
+        return ""
 
 
 class EmptyBlockHandler(Handler):
@@ -83,12 +77,11 @@ class EmptyBlockHandler(Handler):
 
 
 class EmptyBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-        return ''
+        return ""
 
 
 class EscapeCharacterHandler(Handler):
@@ -99,17 +92,16 @@ class EscapeCharacterHandler(Handler):
 
     def __init__(self, parser=None) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'\\(.)')
+        self.RE = re.compile(r"\\(.)")
 
     def subFunc(self, match):
         global CONTAINER
         word = match.group(1)
-        block = EscapeCharacterBlock(word=word, text='\\'+word)
+        block = EscapeCharacterBlock(word=word, text="\\" + word)
         replace_name = self.block.register(block)  # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -121,12 +113,46 @@ class EscapeCharacterHandler(Handler):
 
 
 class EscapeCharacterBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.special_characters = [
+            "*",
+            "[",
+            "]",
+            "{",
+            "}",
+            "(",
+            ")",
+            ".",
+            '"',
+            "'",
+            "\\",
+            "`",
+            "+",
+            "-",
+            "<",
+            ">",
+            "?",
+            "/",
+            "~",
+            "|",
+            "!",
+            "@",
+            "#",
+            "$",
+            "%",
+            "^",
+            "&",
+            ";",
+            ":",
+        ]
 
     def toHTML(self):
-        return self.input['word']
+        if self.input["word"] in self.special_characters:
+            return self.input["word"]
+        else:
+            return "\\" + self.input["word"]
+
 
 # 已废弃
 
@@ -139,19 +165,17 @@ class ExtensionBlockHandler(Handler):  # pragma: no cover
 
     def __init__(self, parser=None) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r"""(
+        self.RE = re.compile(
+            r"""(
             (^{[ ]*%[ ]*note[ ]*%[ ]*}[ ]*)|
             (^{[ ]*%[ ]*info[ ]*%[ ]*}[ ]*)|
             (^{[ ]*%[ ]*success[ ]*%[ ]*}[ ]*)|
             (^{[ ]*%[ ]*end[ ]*%[ ]*}[ ]*)
-        )""", re.VERBOSE)
+        )""",
+            re.VERBOSE,
+        )
 
-        self.groupid_tag = {
-            2: 'note',
-            3: 'info',
-            4: 'success',
-            5: 'end'
-        }
+        self.groupid_tag = {2: "note", 3: "info", 4: "success", 5: "end"}
 
     def __call__(self, root: Block, text: str):
         match = re.match(self.RE, text)
@@ -166,39 +190,35 @@ class ExtensionBlockHandler(Handler):  # pragma: no cover
 
 
 class ExtensionBlock(Block):  # pragma: no cover
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        tag = self.input['tag']
+        tag = self.input["tag"]
         content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        return f'<div id=\"{tag}\">{content}</div>'
+        return f'<div id="{tag}">{content}</div>'
 
 
 class SplitBlockHandler(Handler):
-
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^[-=\*]{3,} *$')      # 分隔符
+        self.RE = re.compile(r"^[-=\*]{3,} *$")  # 分隔符
 
     def __call__(self, root: Block, text: str):
         root.addBlock(SplitBlock(text=text))
 
 
 class SplitBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def __str__(self):  # pragma: no cover
-        return '---<hr>---'
+        return "---<hr>---"
 
     def toHTML(self):
-        return '<hr>'
+        return "<hr>"
 
 
 class HierarchyIndentHandler(Handler):
@@ -209,10 +229,9 @@ class HierarchyIndentHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^([ ]{1,})(.*)')
+        self.RE = re.compile(r"^([ ]{1,})(.*)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         space_number = len(match_group.group(1))
         word = match_group.group(2)
@@ -222,12 +241,11 @@ class HierarchyIndentHandler(Handler):
         # 因为多重 Complex 传递的问题导致的 escape 字符的bug(test8.md)
         # 暂时没有更好的修改方法...
         if len(self.block.sub_blocks) == 1:
-            self.block.input['text'] = ' ' * space_number + self.block.sub_blocks[0].input['text']
+            self.block.input["text"] = " " * space_number + self.block.sub_blocks[0].input["text"]
         root.addBlock(self.block)
 
 
 class HierarchyBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -240,10 +258,9 @@ class CodeBlockHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'`{3,}(.*)')
+        self.RE = re.compile(r"`{3,}(.*)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         language = match_group.group(1).strip()
 
@@ -252,21 +269,20 @@ class CodeBlockHandler(Handler):
             root.addBlock(CodeBlock(language=language, text=text))
         else:
             # 代码段结尾
-            root.addBlock(CodeBlock(language='UNKNOWN', text=text))
+            root.addBlock(CodeBlock(language="UNKNOWN", text=text))
 
 
 class CodeBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         # code用于在优化阶段用于整合所有的代码
-        super().__init__(code='', **kwargs)
+        super().__init__(code="", **kwargs)
 
     def toHTML(self):
-        code = self.input['code']
-        code = re.sub('<', '&lt;', code)
-        code = re.sub('>', '&gt;', code)
-        language = self.input['language']
-        return f'<pre><code class=\"language-{language}\">{code}</code></pre>'
+        code = self.input["code"]
+        code = re.sub("<", "&lt;", code)
+        code = re.sub(">", "&gt;", code)
+        language = self.input["language"]
+        return f'<pre><code class="language-{language}">{code}</code></pre>'
 
 
 class HashHeaderHandler(Handler):
@@ -280,10 +296,9 @@ class HashHeaderHandler(Handler):
         # #开头,1-6个#均可 + 一个空格 + 文字
         # Typora               r'(^#{1,6}) (.+)'
         # Markdown All in One  r'(^#{1,6}) (.?)'
-        self.RE = re.compile(r'(^#{1,6}) (.+)')
+        self.RE = re.compile(r"(^#{1,6}) (.+)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         level = len(match_group.group(1))
         header = match_group.group(2).strip()  # 去掉头尾多余空格
@@ -295,7 +310,6 @@ class HashHeaderHandler(Handler):
 
 
 class HashHeaderBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self.child_blocks = []
@@ -303,45 +317,42 @@ class HashHeaderBlock(Block):
         self.UID = None
 
     def toHTML(self):
-        
-        head_level = str(self.input['level'])
-        tag = f'h{head_level}'
+        head_level = str(self.input["level"])
+        tag = f"h{head_level}"
         if self.UID is not None:
-            tag_id = f'id=\"{tag}-{str(self.UID)}\"'
+            tag_id = f'id="{tag}-{str(self.UID)}"'
         else:
-            tag_id = ''
-        return f'<{tag} {tag_id}>{self.sub_blocks[0].toHTML()}</{tag}>'
-    
+            tag_id = ""
+        return f"<{tag} {tag_id}>{self.sub_blocks[0].toHTML()}</{tag}>"
+
     def to_href(self):
-        '''
+        """
         纯文字形式
-        '''
-        word = ''
+        """
+        word = ""
         if self.sub_blocks[0].block_name == "ComplexBlock":
             block = self.sub_blocks[0]
             for sblock in block.sub_blocks:
-                word += sblock.input['word']
+                word += sblock.input["word"]
         else:
-            word = self.sub_blocks[0].input['word']
+            word = self.sub_blocks[0].input["word"]
         return word
 
-class TaskListHandler(Handler):
 
+class TaskListHandler(Handler):
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'(?<=^[-+\*] )\[([ x])\] (.*)')
+        self.RE = re.compile(r"(?<=^[-+\*] )\[([ x])\] (.*)")
 
     def subFunc(self, match: re.Match):
         is_complete = match.group(1)
         word = match.group(2)
 
-        task_block = TaskListBlock(
-            complete=is_complete, word=word, text=match.group())
+        task_block = TaskListBlock(complete=is_complete, word=word, text=match.group())
         replace_name = self.block.register(task_block)  # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -353,14 +364,12 @@ class TaskListHandler(Handler):
 
 
 class TaskListBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        checked = "checked" if self.input['complete'] == 'x' else ''
-        word = self.input['word']
+        checked = "checked" if self.input["complete"] == "x" else ""
+        word = self.input["word"]
         return f'<div><input type="checkbox" disabled {checked}>{word}</div>'
 
 
@@ -371,66 +380,58 @@ class OListHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^(\d+)\. (.*)')
+        self.RE = re.compile(r"^(\d+)\. (.*)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         serial_number = match_group.group(1)
         align_space_number = len(serial_number) + 2
         word = match_group.group(2)
 
-        block = OListBlock(serial_number=serial_number,
-                           align_space_number=align_space_number,
-                           word=word, text=text)
+        block = OListBlock(
+            serial_number=serial_number, align_space_number=align_space_number, word=word, text=text
+        )
         self.parser.match(block, word)
         root.addBlock(block)
 
 
 class OListBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        serial_number = self.input['serial_number']
-        return f'<ol start=\"{serial_number}\"><li>{content}</li></ol>'
+        serial_number = self.input["serial_number"]
+        return f'<ol start="{serial_number}"><li>{content}</li></ol>'
 
 
 class UListHandler(Handler):
-
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^[-+\*] (.*)')
+        self.RE = re.compile(r"^[-+\*] (.*)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         word = match_group.group(1)
         align_space_number = 2
 
-        block = UListBlock(
-            word=word, align_space_number=align_space_number, text=text)
+        block = UListBlock(word=word, align_space_number=align_space_number, text=text)
         self.parser.match(block, word)
         root.addBlock(block)
 
 
 class UListBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
 
-        return f'<ul><li>{content}</li></ul>'
+        return f"<ul><li>{content}</li></ul>"
 
 
 class QuoteHandler(Handler):
@@ -438,10 +439,9 @@ class QuoteHandler(Handler):
     # > 123
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^>[ ]*(.*)')
+        self.RE = re.compile(r"^>[ ]*(.*)")
 
     def __call__(self, root: Block, text: str):
-
         match_group = re.match(self.RE, text)
         word = match_group.group(1)
         block = QuoteBlock(word=word, text=text)
@@ -450,17 +450,15 @@ class QuoteHandler(Handler):
 
 
 class QuoteBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
 
-        return f'<blockquote>{content}</blockquote>'
+        return f"<blockquote>{content}</blockquote>"
 
 
 class PictureHandler(Handler):
@@ -469,7 +467,7 @@ class PictureHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'!\[([^\!\[\]]*?)\]\((.*?)\)')
+        self.RE = re.compile(r"!\[([^\!\[\]]*?)\]\((.*?)\)")
 
     def subFunc(self, match: re.Match):
         word = match.group(1)
@@ -479,7 +477,6 @@ class PictureHandler(Handler):
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -493,14 +490,13 @@ class PictureHandler(Handler):
 
 
 class PictureBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-        word = self.input['word']
-        url = self.input['url']
-        return f'<img src=\"{url}\" alt=\"{word}\">'
+        word = self.input["word"]
+        url = self.input["url"]
+        return f'<img src="{url}" alt="{word}">'
 
 
 class ReferenceHandler(Handler):
@@ -513,11 +509,14 @@ class ReferenceHandler(Handler):
 
         # Typora               r'\[([^\[\]]*?)\]\((.*?)\)'
         # Markdown All in One  ...
-        self.RE = re.compile(r"""(
+        self.RE = re.compile(
+            r"""(
             \[(.*?)\]\((.*?)\)|
             <(https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?)>|
             \bhttps?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?\b
-        )""", re.VERBOSE)
+        )""",
+            re.VERBOSE,
+        )
 
     def subFunc(self, match: re.Match):
         word = match.group(2)
@@ -535,7 +534,6 @@ class ReferenceHandler(Handler):
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -547,20 +545,18 @@ class ReferenceHandler(Handler):
 
 
 class ReferenceBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # 默认Markdown启用的是_self, 这里存粹是因为我自己的习惯所以改成 _blank
-        self.target = '_blank'
+        self.target = "_blank"
         # self.target = '_self'
 
     def toHTML(self):
-
-        url = self.input['url']
-        content = ''
+        url = self.input["url"]
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        return f"<a href=\"{url}\" target=\"{self.target}\">{content}</a>"
+        return f'<a href="{url}" target="{self.target}">{content}</a>'
 
 
 class SpecialTextHandler(Handler):
@@ -569,37 +565,37 @@ class SpecialTextHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r"""(
+        self.RE = re.compile(
+            r"""(
             \*{3}(.+?)\*{3}|                           # 粗体+斜体
             \*{2}(.+?)\*{2}|                           # 粗体
             \*(.+?)\*|                                 # 斜体
             ~~(.+?)~~|                                 # 删除线
             ``(.+?)``|                                 # 高亮
             `(.+?)`                                    # 高亮
-        )""", re.VERBOSE)
+        )""",
+            re.VERBOSE,
+        )
         self.groupid_tag = {
-            2: 'bold+italics',
-            3: 'bold',
-            4: 'italic',
-            5: 'delete',
-            6: 'highlight',
-            7: 'highlight'
+            2: "bold+italics",
+            3: "bold",
+            4: "italic",
+            5: "delete",
+            6: "highlight",
+            7: "highlight",
         }
 
     def subFunc(self, match: re.Match):
-
         for k, v in self.groupid_tag.items():
             if match.group(k):
                 word = match.group(k)
                 tag = v
                 break
-        special_text_block = SpecialTextBlock(
-            word=word, tag=tag, text=match.group())
+        special_text_block = SpecialTextBlock(word=word, tag=tag, text=match.group())
         replace_name = self.block.register(special_text_block)  # 注册并替换名字
         return replace_name
 
     def __call__(self, root: Block, text: str):
-
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.subFunc, text)
@@ -612,26 +608,24 @@ class SpecialTextHandler(Handler):
 
 
 class SpecialTextBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        tag = self.input['tag']
-        content = ''
+        tag = self.input["tag"]
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        if tag == 'bold+italics':
-            return f'<i><b>{content}</b></i>'
-        elif tag == 'bold':
-            return f'<b>{content}</b>'
-        elif tag == 'italic':
-            return f'<i>{content}</i>'
-        elif tag == 'delete':
-            return f'<del>{content}</del>'
-        elif tag == 'highlight':
-            return f'<code>{content}</code>'
+        if tag == "bold+italics":
+            return f"<i><b>{content}</b></i>"
+        elif tag == "bold":
+            return f"<b>{content}</b>"
+        elif tag == "italic":
+            return f"<i>{content}</i>"
+        elif tag == "delete":
+            return f"<del>{content}</del>"
+        elif tag == "highlight":
+            return f"<code>{content}</code>"
 
 
 class TableHandler(Handler):
@@ -640,24 +634,23 @@ class TableHandler(Handler):
 
     def __init__(self, parser) -> None:
         super().__init__(parser)
-        self.RE = re.compile(r'^\|(?: *:?-{1,}:? *\|)+')  # 判断表格出现
+        self.RE = re.compile(r"^\|(?: *:?-{1,}:? *\|)+")  # 判断表格出现
 
     def __call__(self, root: Block, text: str):
         # 判断对齐方式
-        lines = text.split('|')[1:-1]
+        lines = text.split("|")[1:-1]
         alignments = []
         for line in lines:
-            if re.search(r':-+:', line):
-                alignments.append('center')
-            elif re.search(r'-:', line):
-                alignments.append('right')
+            if re.search(r":-+:", line):
+                alignments.append("center")
+            elif re.search(r"-:", line):
+                alignments.append("right")
             else:
-                alignments.append('left')
+                alignments.append("left")
         root.addBlock(TableBlock(text=text, alignments=alignments))
 
 
 class TableBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         # self.input['header'] 表格头节点
@@ -670,25 +663,24 @@ class TableBlock(Block):
         self.sub_blocks.extend(block.sub_blocks)
 
     def toHTML(self):
+        alignments = self.input["alignments"]
 
-        alignments = self.input['alignments']
+        table_header_content = "<tr>"
+        for block in self.input["header"].sub_blocks:
+            table_header_content += f"<th>{block.toHTML()}</th>"
+        table_header_content += "</tr>"
 
-        table_header_content = '<tr>'
-        for block in self.input['header'].sub_blocks:
-            table_header_content += f'<th>{block.toHTML()}</th>'
-        table_header_content += '</tr>'
-
-        table_items_content = ''
+        table_items_content = ""
         for i in range(len(self.sub_blocks)):
             if i % len(alignments) == 0:
-                table_items_content += '<tr>'
+                table_items_content += "<tr>"
             align_style = alignments[i % len(alignments)]
-            table_items_content += f'<td style=\"text-align:{align_style}\">\
+            table_items_content += f'<td style="text-align:{align_style}">\
                 {self.sub_blocks[i].toHTML()}</td>'
-            if (i+1) % len(alignments) == 0:
-                table_items_content += '</tr>'
+            if (i + 1) % len(alignments) == 0:
+                table_items_content += "</tr>"
 
-        return f'<table>{table_header_content}{table_items_content}</table>'
+        return f"<table>{table_header_content}{table_items_content}</table>"
 
 
 class TextHandler(Handler):
@@ -701,9 +693,8 @@ class TextHandler(Handler):
         return True
 
     def __call__(self, root: Block, text: str):
-
         global CONTAINER
-        RE = re.compile(r'({-%.*?%-})')
+        RE = re.compile(r"({-%.*?%-})")
         split_strings = RE.split(text.strip())
 
         count = 0
@@ -717,19 +708,16 @@ class TextHandler(Handler):
             else:
                 id = string[3:-3]
                 class_object: Block = CONTAINER[id]
-                replace_str = class_object.input['text']
+                replace_str = class_object.input["text"]
                 if class_object is not None:
                     class_object.restore(TextBlock)
-                    temp_block.input['text'] = temp_block.input['text'].replace(
-                        string, replace_str)
-                    root.input['text'] = root.input['text'].replace(
-                        string, replace_str)
+                    temp_block.input["text"] = temp_block.input["text"].replace(string, replace_str)
+                    root.input["text"] = root.input["text"].replace(string, replace_str)
                     temp_block.addBlock(class_object)
                 else:
                     # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
                     # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
-                    temp_block.addBlock(
-                        TextBlock(word=string, text=string))  # pragma: no cover
+                    temp_block.addBlock(TextBlock(word=string, text=string))  # pragma: no cover
             count += 1
 
         if len(temp_block.sub_blocks) <= 1:
@@ -739,17 +727,15 @@ class TextHandler(Handler):
 
 
 class TextBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
         # fix bug: 修复一些 <abc> 这种虽然不匹配网址, 但是会被 html 解析为标签的情况
         # 见 test14.md
-        self.input['word'] = self.input['word'].replace('<','&lt').replace('>','&gt')
+        self.input["word"] = self.input["word"].replace("<", "&lt").replace(">", "&gt")
 
-        return self.input['word']
+        return self.input["word"]
 
 
 def buildBlockParser():

@@ -1,5 +1,3 @@
-
-
 from .base_class import Parser, Handler
 import re
 from .block_parser import HTMLBlock, EscapeCharacterBlock, AnnotateBlock
@@ -7,7 +5,6 @@ from .base_class import CONTAINER
 
 
 class PreprocessParser(Parser):
-
     def __init__(self) -> None:
         super().__init__()
 
@@ -15,19 +12,17 @@ class PreprocessParser(Parser):
         self._sort()
         # 按优先级逐步执行相应处理方法
         for method in self._handlers:
-            data = method['object'](data)
+            data = method["object"](data)
 
-        lines = data.split('\n')
+        lines = data.split("\n")
         return lines
 
 
 class TabHandler(Handler):
-
     def __init__(self) -> None:
         super().__init__()
 
     def __call__(self, text: str):
-
         text = text.replace("\r\n", "\n").replace("\r", "\n")
         text = text.expandtabs(tabsize=4)
 
@@ -43,12 +38,11 @@ class EscapeCharacterHandler(Handler):
     def subFunc(self, match):
         global CONTAINER
         word = match.group(1)
-        block = EscapeCharacterBlock(word=word, text='\\'+word)
+        block = EscapeCharacterBlock(word=word, text="\\" + word)
         return CONTAINER.register(block)
 
     def __call__(self, text: str):
-
-        text = re.sub(r'\\(.)', self.subFunc, text)
+        text = re.sub(r"\\(.)", self.subFunc, text)
         return text
 
 
@@ -65,21 +59,18 @@ class AnnotateHandler(Handler):
         return CONTAINER.register(block)
 
     def __call__(self, text: str):
-
-        text = re.sub(r'\<!--[\s\S]*?--\>', self.subFunc,
-                      text)                # 去除注释
+        text = re.sub(r"\<!--[\s\S]*?--\>", self.subFunc, text)  # 去除注释
         return text
 
 
 class HTMLLabelHandler(Handler):
-
     # TODO: 标签不自闭合的处理
 
     def __init__(self) -> None:
-
         super().__init__()
 
-        self.RE = re.compile(r"""
+        self.RE = re.compile(
+            r"""
             (<div[\s\S]*?>[\s\S]*?<\/div>|         # div
             <span[\s\S]*?>[\s\S]*?<\/span>|        # span
             <p[\s\S]*?>[\s\S]*?<\/p>|            # p
@@ -87,10 +78,11 @@ class HTMLLabelHandler(Handler):
             <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
             <br\/?>|
             <kbd>[\s\S]*?</kbd>
-            )""", re.VERBOSE)
+            )""",
+            re.VERBOSE,
+        )
 
     def __call__(self, text: str):
-
         def subFunc(match):
             global CONTAINER
             src = match.group(0)
@@ -98,7 +90,7 @@ class HTMLLabelHandler(Handler):
             return CONTAINER.register(block)
 
         text = re.sub(self.RE, subFunc, text)
-        text = re.sub(r'^[\n]+', '', text)                    # 去除开头连续空换行
+        text = re.sub(r"^[\n]+", "", text)  # 去除开头连续空换行
         # text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
         # text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行
         # print(text)

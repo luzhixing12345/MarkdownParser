@@ -1,5 +1,3 @@
-
-
 from .preprocess_parser import buildPreprocessParser
 from .block_parser import buildBlockParser
 from .tree_parser import buildTreeParser
@@ -10,13 +8,11 @@ class Markdown:
         self.build_parser()
 
     def build_parser(self):
-
         self.preprocess_parser = buildPreprocessParser()
         self.block_parser = buildBlockParser()
         self.tree_parser = buildTreeParser()
 
     def parse(self, text: str) -> str:
-
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
         # print(lines)
@@ -30,7 +26,6 @@ class Markdown:
         return tree.toHTML()
 
     def parse_with_tag(self, text: str):
-
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
         # print(lines)
@@ -44,7 +39,6 @@ class Markdown:
         return tree.toHTML(header_navigater)
 
     def get_header_list(self, tree):
-
         UID = 0
         H0_block = []
         activate_block = None  # 激活节点
@@ -52,7 +46,7 @@ class Markdown:
         for block in tree.sub_blocks:
             # 对所有 HashHeaderBlock 统计树结构
             if block.block_name == "HashHeaderBlock":
-                current_head_level = block.input['level']
+                current_head_level = block.input["level"]
                 # 第一次匹配
                 if activate_block is None:
                     activate_block = block
@@ -95,7 +89,7 @@ class Markdown:
                             activate_block = activate_block.parent_block
                             if activate_block is None:
                                 break
-                            activate_block_level = activate_block.input['level']
+                            activate_block_level = activate_block.input["level"]
 
                         # 到达根部
                         if activate_block is None:
@@ -117,73 +111,73 @@ class Markdown:
         return self.get_header_navigator(H0_block)
 
     def get_header_navigator(self, H0_block):
-
-        navigator_html = ''
+        navigator_html = ""
         for block in H0_block:
             navigator_html += self._get_header_navigator(block)
-        navigator_html = f'<div class=\"header-navigator\">{navigator_html}</div>'
+        navigator_html = f'<div class="header-navigator">{navigator_html}</div>'
         return navigator_html
 
     def _get_header_navigator(self, block):
-
-        navigator_html = ''
-        level = block.input['level']
-        tag = f'h{str(level)}-{str(block.UID)}'
+        navigator_html = ""
+        level = block.input["level"]
+        tag = f"h{str(level)}-{str(block.UID)}"
         word = block.to_href()
         if len(block.child_blocks) == 0:
-            navigator_html = f'<ul><li><a href=\"#{tag}\">{word}</a></li></ul>'
+            navigator_html = f'<ul><li><a href="#{tag}">{word}</a></li></ul>'
         else:
-            sub_navigator_html = ''
+            sub_navigator_html = ""
             for cblock in block.child_blocks:
                 sub_navigator_html += self._get_header_navigator(cblock)
-            navigator_html = f'<ul><li><a href=\"#{tag}\">{word}</a>{sub_navigator_html}</li></ul>'
+            navigator_html = f'<ul><li><a href="#{tag}">{word}</a>{sub_navigator_html}</li></ul>'
 
         return navigator_html
 
 
-def parse(text: str, ) -> str:
-    '''
+def parse(
+    text: str,
+) -> str:
+    """
     解析 markdown 文本转 html
-    '''
+    """
     assert type(text) == str, "输入应为字符串"
 
     # 空输入
     if not text.strip():
-        return ''
+        return ""
 
     md = Markdown()
     return md.parse(text)
 
 
 def parse_file(file_name: str) -> str:
-    '''
+    """
     解析 md 文件转 html
-    '''
-    with open(file_name, 'r', encoding='utf-8') as f:
+    """
+    with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
     return parse(text)
 
 
 def parse_toc(text: str) -> str:
-    '''
+    """
     解析 markdown 文本, 带目录树
-    '''
+    """
     assert type(text) == str, "输入应为字符串"
 
     # 空输入
     if not text.strip():
-        return ''
+        return ""
 
     md = Markdown()
     return md.parse_with_tag(text)
 
 
 def parse_file_toc(file_name: str) -> str:
-    '''
+    """
     解析 md 文件, 带目录树
-    '''
-    with open(file_name, 'r', encoding='utf-8') as f:
+    """
+    with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
     return parse_toc(text)

@@ -1,4 +1,3 @@
-
 import re
 
 
@@ -15,43 +14,39 @@ class Container:
         self.__str__ = self.__repr__
 
     def __repr__(self) -> str:  # pragma: no cover
-
-        split_line = '-' * 50 + '\n'
-        info = f'Total number: {self._counter}\n\n'
+        split_line = "-" * 50 + "\n"
+        info = f"Total number: {self._counter}\n\n"
 
         for k, v in self._container.items():
-            info += f'[{k}]'.ljust(30)
-            if v.input.get('word') is not None:
-                info += ' < word = ' + v.input['word'] + ' >'
-            info += '\n'
+            info += f"[{k}]".ljust(30)
+            if v.input.get("word") is not None:
+                info += " < word = " + v.input["word"] + " >"
+            info += "\n"
         return split_line + info + split_line
 
     def __getitem__(self, key):
         return self._container.get(key, None)
 
     def register(self, class_object):
-        _name = f'{class_object.__class__.__name__}-{str(self._counter)}'
+        _name = f"{class_object.__class__.__name__}-{str(self._counter)}"
         self._counter += 1
         self._container[_name] = class_object
-        return '{-%' + _name + '%-}'
+        return "{-%" + _name + "%-}"
 
 
 CONTAINER = Container()
 
 
 class Parser:
-
     def __init__(self) -> None:
         self._handlers = []  # 保存所有注册的方法
         self.is_sorted = False
 
     def _sort(self):
-
         # 按照优先级从高到低排序,使得解析时依次调用方法
-        self._handlers.sort(key=lambda item: item['priority'], reverse=True)
+        self._handlers.sort(key=lambda item: item["priority"], reverse=True)
 
     def __call__(self, *args, **kwargs):  # pragma: no cover
-
         raise NotImplementedError
 
     def info(self):  # pragma: no cover
@@ -59,32 +54,26 @@ class Parser:
         if not self.is_sorted:
             self._sort()
         for method in self._handlers:
-            name = method['name']
-            class_name = method['object'].__class__.__name__
-            priority = method['priority']
-            print(f'[{name}]({priority}) : {class_name}')
+            name = method["name"]
+            class_name = method["object"].__class__.__name__
+            priority = method["priority"]
+            print(f"[{name}]({priority}) : {class_name}")
 
     def register(self, class_object: object, priority: int = 0) -> None:
-
-        new_method = {
-            'priority': priority,
-            'object': class_object
-        }
+        new_method = {"priority": priority, "object": class_object}
 
         self._handlers.append(new_method)
 
 
 class Block:
-
     def __init__(self, **kwargs) -> None:
         self.input = kwargs
-        self.input['text']: str  # 输入的纯文本,用于恢复原始信息
-        self.input['word']: str  # 解析提取后的核心文本信息
-        self.sub_blocks = []   # 子模块
+        self.input["text"]: str  # 输入的纯文本,用于恢复原始信息
+        self.input["word"]: str  # 解析提取后的核心文本信息
+        self.sub_blocks = []  # 子模块
         self.block_name = self.__class__.__name__
 
     def register(self, class_object):
-
         global CONTAINER
         return CONTAINER.register(class_object)
 
@@ -92,8 +81,8 @@ class Block:
         # restore用于恢复嵌套的block替换
         # 这里传入 TextBlock 是因为 TextBlock 还未定义
         global CONTAINER
-        RE = re.compile(r'({-%.*?%-})')
-        split_strings = RE.split(self.input['word'])
+        RE = re.compile(r"({-%.*?%-})")
+        split_strings = RE.split(self.input["word"])
         count = 0
 
         for string in split_strings:
@@ -105,28 +94,25 @@ class Block:
                 id = string[3:-3]
                 class_object: Block = CONTAINER[id]
                 class_object.restore(TextBlock)
-                self.input['text'] = self.input['text'].replace(
-                    string, class_object.input['text'])
+                self.input["text"] = self.input["text"].replace(string, class_object.input["text"])
                 self.addBlock(class_object)
             count += 1
 
     def addBlock(self, block):
-
         self.sub_blocks.append(block)
 
     def __str__(self):  # pragma: no cover
-
         if not self.input:
-            return ''
-        output = '< '
+            return ""
+        output = "< "
         for k, v in self.input.items():
-            if k == 'text':
+            if k == "text":
                 continue
-            output += f'{k} = \"{v}\" | '
-        if output == '< ':
-            output = ''
+            output += f'{k} = "{v}" | '
+        if output == "< ":
+            output = ""
         else:
-            output = output[:-3] + ' >'
+            output = output[:-3] + " >"
         return output
 
     def info(self, deep: int = 0):  # pragma: no cover
@@ -137,26 +123,26 @@ class Block:
             return
         else:
             for block in self.sub_blocks:
-                print(' '*4*deep, end='')
-                print(f'[{block.__class__.__name__}] {str(block)}')
-                block.info(deep+1)
+                print(" " * 4 * deep, end="")
+                print(f"[{block.__class__.__name__}] {str(block)}")
+                block.info(deep + 1)
 
     def printInfo(self, deep: int = 0) -> str:  # pragma: no cover
         # print(root.printInfo())
         # 递归输出信息
-        output_str = ''
+        output_str = ""
         if self.sub_blocks == []:
             return output_str
         else:
             for block in self.sub_blocks:
-                output_str += ' '*4*deep
-                output_str += f'[{block.__class__.__name__}] {str(block)}\n'
-                output_str += block.printInfo(deep+1)
+                output_str += " " * 4 * deep
+                output_str += f"[{block.__class__.__name__}] {str(block)}\n"
+                output_str += block.printInfo(deep + 1)
             return output_str
 
     def toHTML(self, header_navigater=None):
         # 转换成HTML格式
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
         if header_navigater:
@@ -166,32 +152,25 @@ class Block:
 
 
 class Handler:
-
     def __init__(self, parser=None) -> None:
-
         self.RE = None
         self.parser: Parser = parser
 
     def match(self, text: str, *args):  # pragma: no cover
-
         if self.RE is None:
             raise NotImplementedError
 
         return bool(self.RE.search(text))
 
     def __call__(self, root: Block, text: str):  # pragma: no cover
-
         raise NotImplementedError
 
 
 class Optimizer:
-
     def __init__(self) -> None:
-
         # 优化器针对的Block
         self.target_block_names = []
         self.is_match = False
 
     def __call__(self, root: Block):  # pragma: no cover
-
         raise NotImplementedError

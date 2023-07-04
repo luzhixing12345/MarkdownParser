@@ -1,11 +1,8 @@
-
-
 import MarkdownParser
 import unittest
 
 
 class TestMyMdParser(unittest.TestCase):
-
     def test_parse_heading(self):
         MarkdownParser.parse("")
         MarkdownParser.parse("# Heading")

@@ -1,17 +1,25 @@
-
 import re
 from .base_class import Parser, Optimizer, Block
-from .block_parser import TableBlock, BlockParser, TextBlock, EmptyBlockHandler, EscapeCharacterHandler, PictureHandler, ReferenceHandler, SpecialTextHandler, TableHandler, TextHandler
+from .block_parser import (
+    TableBlock,
+    BlockParser,
+    TextBlock,
+    EmptyBlockHandler,
+    EscapeCharacterHandler,
+    PictureHandler,
+    ReferenceHandler,
+    SpecialTextHandler,
+    TableHandler,
+    TextHandler,
+)
 
 
 class TreeParser(Parser):
-
     def __init__(self) -> None:
         super().__init__()
 
     def __call__(self, root: Block):
-
-        root.input['align_space_number'] = 0  # 用于 HierarchyEliminate 阶段的对齐空格调整
+        root.input["align_space_number"] = 0  # 用于 HierarchyEliminate 阶段的对齐空格调整
 
         self.checkBlock(root)
         return root
@@ -20,7 +28,7 @@ class TreeParser(Parser):
         # 深度优先的遍历root的所有节点,
         # 如果遇到相应的可优化项则将节点交由对应的优化器处理
         for optimizer in self._handlers:
-            optimizer['object'](block)
+            optimizer["object"](block)
 
         if block.sub_blocks == []:
             return
@@ -34,10 +42,9 @@ class HierarchyMerge(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['HierarchyBlock', 'EmptyBlock']
+        self.target_block_names = ["HierarchyBlock", "EmptyBlock"]
 
     def __call__(self, root: Block):
-
         new_sub_blocks = []
         activite_block = None
         activite_space_number = 0
@@ -50,25 +57,24 @@ class HierarchyMerge(Optimizer):
 
                 # first meet
                 if activite_block is None:
-                    activite_space_number = block.input.get('space_number', -1)
+                    activite_space_number = block.input.get("space_number", -1)
                     # 未在匹配状态的EmptyBlock不算入
                     if activite_space_number == -1:
                         new_sub_blocks.append(block)
                     else:
                         activite_block = block
                 else:
-                    current_space_number = block.input.get('space_number', -1)
+                    current_space_number = block.input.get("space_number", -1)
 
                     # 不处理连续的EmptyBlock
                     if current_space_number == -1:
-                        if activite_block.sub_blocks[-1].block_name == 'EmptyBlock':
+                        if activite_block.sub_blocks[-1].block_name == "EmptyBlock":
                             continue
                         else:
                             activite_block.sub_blocks.append(block)
                     # 层次相同,合并
                     elif current_space_number == activite_space_number:
-                        activite_block.input['text'] += '\n' + \
-                            block.input['text']
+                        activite_block.input["text"] += "\n" + block.input["text"]
                         activite_block.sub_blocks.extend(block.sub_blocks)
                     else:
                         # 层次缩进改变
@@ -93,10 +99,9 @@ class QuoteBlockMerge(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['QuoteBlock']
+        self.target_block_names = ["QuoteBlock"]
 
     def __call__(self, root: Block):
-
         new_sub_blocks = []
         activite_block = None
 
@@ -106,7 +111,7 @@ class QuoteBlockMerge(Optimizer):
                 if activite_block is None:
                     activite_block = block
                 else:
-                    activite_block.input['text'] += '\n' + block.input['text']
+                    activite_block.input["text"] += "\n" + block.input["text"]
                     activite_block.sub_blocks.extend(block.sub_blocks)
             else:
                 if activite_block is not None:
@@ -125,16 +130,14 @@ class CodeBlockOptimizer(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['CodeBlock']
+        self.target_block_names = ["CodeBlock"]
 
     def __call__(self, root: Block):
-
         activite_CodeBlock = None
         restore_text = False
         new_sub_blocks = []
 
         for i in range(len(root.sub_blocks)):
-
             block: Block = root.sub_blocks[i]
             # 开始恢复纯文本
             if restore_text:
@@ -142,11 +145,11 @@ class CodeBlockOptimizer(Optimizer):
                 if block.block_name in self.target_block_names:
                     restore_text = False
                     # 去掉结尾换行符
-                    activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1]
+                    activite_CodeBlock.input["code"] = activite_CodeBlock.input["code"][:-1]
                     new_sub_blocks.append(activite_CodeBlock)
                     activite_CodeBlock = None
                     continue
-                activite_CodeBlock.input['code'] += block.input['text'] + '\n'
+                activite_CodeBlock.input["code"] += block.input["text"] + "\n"
             else:
                 if block.block_name in self.target_block_names:
                     restore_text = True
@@ -157,7 +160,7 @@ class CodeBlockOptimizer(Optimizer):
         # 代码段不匹配,一直到结尾全部恢复为文本
         if activite_CodeBlock is not None:
             # 去掉结尾换行符
-            activite_CodeBlock.input['code'] = activite_CodeBlock.input['code'][:-1]
+            activite_CodeBlock.input["code"] = activite_CodeBlock.input["code"][:-1]
             new_sub_blocks.append(activite_CodeBlock)
 
         root.sub_blocks = new_sub_blocks
@@ -169,10 +172,15 @@ class HierarchyEliminate(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['UListBlock', 'OListBlock']
+        self.target_block_names = ["UListBlock", "OListBlock"]
 
         self.interrupt_block_names = [
-            'CodeBlock', 'HashHeaderBlock', 'TableBlock', 'QuoteBlock', 'SplitBlock']
+            "CodeBlock",
+            "HashHeaderBlock",
+            "TableBlock",
+            "QuoteBlock",
+            "SplitBlock",
+        ]
         # 递进级层次缩进被打断
         # 例子:
         #
@@ -181,10 +189,9 @@ class HierarchyEliminate(Optimizer):
         #   - aaa
 
     def __call__(self, root: Block):
-
         # 当前节点的所需的对齐空格长度
         # 如果没有该属性则说明不需要考虑层次缩进的情况
-        root_align_space_number = root.input.get('align_space_number', None)
+        root_align_space_number = root.input.get("align_space_number", None)
         if root_align_space_number is None:
             return
 
@@ -196,7 +203,7 @@ class HierarchyEliminate(Optimizer):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
                 # 对齐长度从根节点依次传递下去
-                block.input['align_space_number'] += root_align_space_number
+                block.input["align_space_number"] += root_align_space_number
                 # 切换
                 if deeper_indent:
                     new_sub_blocks.append(activite_block)
@@ -209,10 +216,11 @@ class HierarchyEliminate(Optimizer):
                     activite_block = None
                 new_sub_blocks.append(block)
 
-            elif block.block_name == 'HierarchyBlock':
+            elif block.block_name == "HierarchyBlock":
                 if deeper_indent:
-                    left_space_number = block.input['space_number'] - \
-                        activite_block.input['align_space_number']
+                    left_space_number = (
+                        block.input["space_number"] - activite_block.input["align_space_number"]
+                    )
                     # 刚好满足缩进,直接展开
                     if left_space_number == 0:
                         activite_block.sub_blocks.extend(block.sub_blocks)
@@ -231,13 +239,16 @@ class HierarchyEliminate(Optimizer):
                     new_sub_blocks.extend(block.sub_blocks)
             else:
                 # EmptyBlock 先补齐在 UList OListBlock 下
-                if block.block_name == 'EmptyBlock':
+                if block.block_name == "EmptyBlock":
                     if deeper_indent:
                         # 忽略连续的EmptyBlock
-                        if activite_block.sub_blocks[-1].block_name != 'EmptyBlock':
+                        if activite_block.sub_blocks[-1].block_name != "EmptyBlock":
                             activite_block.addBlock(block)
                     else:
-                        if len(new_sub_blocks) > 1 and new_sub_blocks[-1].block_name == 'EmptyBlock':
+                        if (
+                            len(new_sub_blocks) > 1
+                            and new_sub_blocks[-1].block_name == "EmptyBlock"
+                        ):
                             continue
                         else:
                             new_sub_blocks.append(block)
@@ -259,61 +270,61 @@ class OListSerialOptimizer(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['OListBlock', 'EmptyBlock']
+        self.target_block_names = ["OListBlock", "EmptyBlock"]
 
     def __call__(self, root: Block):
-
         new_sub_blocks = []
         first_number = None
 
         for i in range(len(root.sub_blocks)):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
-                if block.block_name == 'EmptyBlock':
+                if block.block_name == "EmptyBlock":
                     continue
                 if first_number is None:
-                    first_number = int(block.input['serial_number'])
+                    first_number = int(block.input["serial_number"])
                 else:
                     first_number += 1
-                    block.input['serial_number'] = str(first_number)
+                    block.input["serial_number"] = str(first_number)
             else:
                 first_number = None
                 new_sub_blocks.append(block)
+
 
 # abort
 
 
 class ExtensionOptimizer(Optimizer):  # pragma: no cover
-
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['ExtensionBlock']
-        self.extension_tag = ['note', 'info', 'success']
+        self.target_block_names = ["ExtensionBlock"]
+        self.extension_tag = ["note", "info", "success"]
 
     def __call__(self, root: Block):
-
         activite_block = None
         new_sub_blocks = []
 
         for i in range(len(root.sub_blocks)):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
-                if block.input['tag'] in self.extension_tag:
+                if block.input["tag"] in self.extension_tag:
                     if activite_block is None:
                         activite_block = block
                     # 不支持嵌套使用, 恢复为纯文本
                     else:
                         activite_block.addBlock(
-                            TextBlock(text=block.input['text'], word=block.input['text']))
-                elif block.input['tag'] == 'end':
+                            TextBlock(text=block.input["text"], word=block.input["text"])
+                        )
+                elif block.input["tag"] == "end":
                     if activite_block is None:
                         new_sub_blocks.append(
-                            TextBlock(text=block.input['text'], word=block.input['text']))
+                            TextBlock(text=block.input["text"], word=block.input["text"])
+                        )
                     else:
                         new_sub_blocks.append(activite_block)
                         activite_block = None
                 else:
-                    raise KeyError("Unknown tag " + block.input['tag'])
+                    raise KeyError("Unknown tag " + block.input["tag"])
             else:
                 if activite_block is not None:
                     activite_block.addBlock(block)
@@ -327,11 +338,10 @@ class ExtensionOptimizer(Optimizer):  # pragma: no cover
 
 
 class TableBlockOptimizer(Optimizer):
-
     def __init__(self) -> None:
         super().__init__()
-        self.RE = re.compile(r'(?<!\\)\|')
-        self.block_parser = BlockParser()  # 初始化一个block parser 用于解析表格中出现的每一个表项, 
+        self.RE = re.compile(r"(?<!\\)\|")
+        self.block_parser = BlockParser()  # 初始化一个block parser 用于解析表格中出现的每一个表项,
         # 只注册下面这些 Handler, 不解析其他的
         self.block_parser.register(EmptyBlockHandler(self.block_parser), 100)
         self.block_parser.register(EscapeCharacterHandler(self.block_parser), 98)
@@ -341,21 +351,21 @@ class TableBlockOptimizer(Optimizer):
         self.block_parser.register(TableHandler(self.block_parser), 4)
         self.block_parser.register(TextHandler(self.block_parser), 0)
         # 匹配的
-        self.table_block_names = ['TableBlock']
+        self.table_block_names = ["TableBlock"]
 
         # 表格匹配,其余中断
-        self.header_block_names = ['TextBlock', 'ComplexBlock']
-        self.body_block_names = ['TextBlock', 'ComplexBlock', 'TableBlock']
+        self.header_block_names = ["TextBlock", "ComplexBlock"]
+        self.body_block_names = ["TextBlock", "ComplexBlock", "TableBlock"]
 
     def _createTableBlock(self, header_block: Block, table_block: Block):
         # 判断header和table列是否匹配
         # 匹配返回一个TableBlock对象实例,用于后续补充表格
         # 不匹配返回None
-        table_length = len(table_block.input['alignments'])
-        header_text = header_block.input['text']  # 获取原文
+        table_length = len(table_block.input["alignments"])
+        header_text = header_block.input["text"]  # 获取原文
 
         header = self.RE.split(header_text)
-        if len(header)-2 != table_length:
+        if len(header) - 2 != table_length:
             return None
 
         # 匹配,创建实例
@@ -365,42 +375,38 @@ class TableBlockOptimizer(Optimizer):
         # 重新解析每一个table的表项
         table_header_node = self.block_parser(header)
 
-        header_info = [i.input['word'] for i in table_header_node.sub_blocks]
-        table_header_node.input['info'] = header_info
+        header_info = [i.input["word"] for i in table_header_node.sub_blocks]
+        table_header_node.input["info"] = header_info
         new_table_block = TableBlock(
-            header=table_header_node,
-            alignments=table_block.input['alignments'],
-            length=len(header)
+            header=table_header_node, alignments=table_block.input["alignments"], length=len(header)
         )
         return new_table_block
 
     def _addTableItem(self, table_block: TableBlock, table_item_block: Block):
         # 添加表格项,多去少补
 
-        table_items = self.RE.split(table_item_block.input['text'])
+        table_items = self.RE.split(table_item_block.input["text"])
         if not table_items[0]:
             table_items.pop(0)
         if not table_items[-1]:
             table_items.pop()
-        table_length = table_block.input['length']
+        table_length = table_block.input["length"]
         if len(table_items) > table_length:
             table_items = table_items[:table_length]
         else:
-            table_items.extend(
-                [' ' for _ in range(table_length-len(table_items))])
+            table_items.extend([" " for _ in range(table_length - len(table_items))])
 
         for i in range(len(table_items)):
             table_items[i] = table_items[i].strip()
 
         table_item_node = self.block_parser(table_items)
         for i in range(len(table_item_node.sub_blocks)):
-            if table_item_node.sub_blocks[i].__class__.__name__ == 'EmptyBlock':
-                table_item_node.sub_blocks[i] = TextBlock(text='', word='')
+            if table_item_node.sub_blocks[i].__class__.__name__ == "EmptyBlock":
+                table_item_node.sub_blocks[i] = TextBlock(text="", word="")
         table_block._addTableItem(table_item_node)
         # table_item_node.info()
 
     def __call__(self, root: Block):
-
         new_sub_blocks = []
         table_block = None
         # 分两步匹配
@@ -423,10 +429,9 @@ class TableBlockOptimizer(Optimizer):
             # 尝试匹配 TableBlock, 开头不可以
             if block.block_name in self.table_block_names and i != 0:
                 # 第一步匹配
-                if root.sub_blocks[i-1].block_name in self.header_block_names:
+                if root.sub_blocks[i - 1].block_name in self.header_block_names:
                     # 第二步匹配
-                    table_block = self._createTableBlock(
-                        root.sub_blocks[i-1], block)
+                    table_block = self._createTableBlock(root.sub_blocks[i - 1], block)
                     # 匹配成功
                     if table_block is not None:
                         match_table = True
@@ -435,12 +440,12 @@ class TableBlockOptimizer(Optimizer):
                     else:
                         # 将TableBlock变为纯文本
                         new_sub_blocks.append(
-                            TextBlock(text=block.input['text'], word=block.input['text']))
+                            TextBlock(text=block.input["text"], word=block.input["text"])
+                        )
                         match_table = False
                 else:
                     # 第一步匹配失败则将 block 回退为 TextBlock
-                    block = TextBlock(
-                        text=block.input['text'], word=block.input['text'])
+                    block = TextBlock(text=block.input["text"], word=block.input["text"])
                     new_sub_blocks.append(block)
             else:
                 new_sub_blocks.append(block)
@@ -456,15 +461,28 @@ class ParagraphOptimizer(Optimizer):
 
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['TextBlock', 'ComplexBlock', 'ReferenceBlock',
-                                   'PictureBlock', 'SpecialTextBlock', 'EscapeCharacterBlock']
-        self.interrupt_block_names = ['ParagraphBlock', 'HashHeaderBlock', 'EscapeCharacterBlock',
-                                      'TableBlock', 'HTMLBlock',
-                                      'ComplexBlock', 'ReferenceBlock', 'PictureBlock',
-                                      'SpecialTextBlock', 'AnnotateBlock']
+        self.target_block_names = [
+            "TextBlock",
+            "ComplexBlock",
+            "ReferenceBlock",
+            "PictureBlock",
+            "SpecialTextBlock",
+            "EscapeCharacterBlock",
+        ]
+        self.interrupt_block_names = [
+            "ParagraphBlock",
+            "HashHeaderBlock",
+            "EscapeCharacterBlock",
+            "TableBlock",
+            "HTMLBlock",
+            "ComplexBlock",
+            "ReferenceBlock",
+            "PictureBlock",
+            "SpecialTextBlock",
+            "AnnotateBlock",
+        ]
 
     def __call__(self, root: Block):
-
         if root.__class__.__name__ in self.interrupt_block_names:
             return
         activite_block = None
@@ -474,7 +492,7 @@ class ParagraphOptimizer(Optimizer):
             block: Block = root.sub_blocks[i]
             if block.block_name in self.target_block_names:
                 # 特殊情况,不划入ParagraphBlock
-                if root.__class__.__name__ in ['OListBlock', 'UListBlock'] and i == 0:
+                if root.__class__.__name__ in ["OListBlock", "UListBlock"] and i == 0:
                     new_sub_blocks.append(block)
                 elif activite_block is None:
                     activite_block = ParagraphBlock()
@@ -494,35 +512,32 @@ class ParagraphOptimizer(Optimizer):
 
 
 class ParagraphBlock(Block):
-
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def toHTML(self):
-
-        content = ''
+        content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        return f'<p>{content}</p>'
+        return f"<p>{content}</p>"
 
 
 class SpecialTextOptimizer(Optimizer):
     # 将高亮的文本恢复回
     def __init__(self) -> None:
         super().__init__()
-        self.target_block_names = ['SpecialTextBlock']
+        self.target_block_names = ["SpecialTextBlock"]
 
     def __call__(self, root: Block):
         # return
-        if root.__class__.__name__ in self.target_block_names and root.input['tag'] == 'highlight':
+        if root.__class__.__name__ in self.target_block_names and root.input["tag"] == "highlight":
             for i in range(len(root.sub_blocks)):
                 block: Block = root.sub_blocks[i]
-                origin_text = block.input['text']
+                origin_text = block.input["text"]
                 # 替换以消除html元素影响
-                origin_text = re.sub('<', '&lt;', origin_text)
-                origin_text = re.sub('>', '&gt;', origin_text)
-                root.sub_blocks[i] = TextBlock(
-                    text=origin_text, word=origin_text)
+                origin_text = re.sub("<", "&lt;", origin_text)
+                origin_text = re.sub(">", "&gt;", origin_text)
+                root.sub_blocks[i] = TextBlock(text=origin_text, word=origin_text)
 
 
 def buildTreeParser():
