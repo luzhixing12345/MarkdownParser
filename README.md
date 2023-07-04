@@ -37,7 +37,9 @@ def parse_toc(text: str) -> str:
 def parse_file_toc(file_name: str) -> str:
 ```
 
-## 测试
+## 结果预览与 Markdown 功能测试
+
+本仓库下提供了了一个快速验证转换结果的工具 generate.py
 
 ```bash
 python generate.py <FILE_NAME>
@@ -46,18 +48,9 @@ python generate.py <FILE_NAME>
 # python generate.py README.md
 ```
 
-运行会生成index.html, 使用浏览器打开生成的index.html即可与您的Markdown编辑器的预期渲染结果对比
+运行会生成index.html, 使用浏览器打开生成的index.html即可与您预期的渲染结果对比, README 的渲染结果如下所示
 
 ![20230218202400](https://raw.githubusercontent.com/learner-lu/picbed/master/20230218202400.png)
-
-代码覆盖率
-
-```bash
-pip install coverage
-
-coverage run -m unittest
-coverage html
-```
 
 ## 实现思路
 
@@ -87,8 +80,9 @@ def parse(self, text: str) -> str:
 - [^1]的引用方式
 - Setext 形式的标题
 - 上标 / 下标 / 下划线
+- `<details><summary></summary></details>` 折叠块
 
-## 补充说明
+## HTML 结果说明
 
 - 生成的结果如下 `<div class='markdown-body'>markdown内容</div>`
 - 代码段会根据语言加入一个类名便于后期高亮,例如 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
@@ -160,8 +154,7 @@ def parse(self, text: str) -> str:
 
   注意,这里仅支持很少一部分数学公式
 
-
-## 相关参考
+## 参考
 
 - [Github Markdown CSS](https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css)
 - [Mermaid API](https://mermaid.js.org/intro/#mermaid-api)
