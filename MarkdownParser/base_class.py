@@ -1,11 +1,12 @@
 import re
+from typing import List, Dict, Union
 
 
 class Container:
     # 用于记录全局解析时的中间变量替换
 
     def __init__(self) -> None:
-        self._container = {
+        self._container:Dict[str,Block] = {
             # block类名-唯一标识符 : block类对象
             #
         }
@@ -39,7 +40,7 @@ CONTAINER = Container()
 
 class Parser:
     def __init__(self) -> None:
-        self._handlers = []  # 保存所有注册的方法
+        self._handlers:List[Dict[str, Handler]] = []  # 保存所有注册的方法
         self.is_sorted = False
 
     def _sort(self):
@@ -59,18 +60,21 @@ class Parser:
             priority = method["priority"]
             print(f"[{name}]({priority}) : {class_name}")
 
-    def register(self, class_object: object, priority: int = 0) -> None:
-        new_method = {"priority": priority, "object": class_object}
-
+    def register(self, handler: "Handler", priority: int = 0) -> None:
+        handler.parser = self
+        new_method = {"priority": priority, "object": handler}
         self._handlers.append(new_method)
+
+    def match(self, root: "Block", text: str): # pragma: no cover
+        raise NotImplementedError
 
 
 class Block:
     def __init__(self, **kwargs) -> None:
-        self.input = kwargs
+        self.input:Dict[str, Union[str, Block]] = kwargs
         self.input["text"]: str  # 输入的纯文本,用于恢复原始信息
         self.input["word"]: str  # 解析提取后的核心文本信息
-        self.sub_blocks = []  # 子模块
+        self.sub_blocks: List[Block] = []  # 子模块
         self.block_name = self.__class__.__name__
 
     def register(self, class_object):
@@ -152,9 +156,9 @@ class Block:
 
 
 class Handler:
-    def __init__(self, parser=None) -> None:
-        self.RE = None
-        self.parser: Parser = parser
+    def __init__(self) -> None:
+        self.RE: re.Pattern = None
+        self.parser:Parser = None
 
     def match(self, text: str, *args):  # pragma: no cover
         if self.RE is None:
@@ -169,7 +173,7 @@ class Handler:
 class Optimizer:
     def __init__(self) -> None:
         # 优化器针对的Block
-        self.target_block_names = []
+        self.target_block_names:List[str] = []
         self.is_match = False
 
     def __call__(self, root: Block):  # pragma: no cover

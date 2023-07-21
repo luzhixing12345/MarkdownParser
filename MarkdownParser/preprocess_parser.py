@@ -32,34 +32,34 @@ class TabHandler(Handler):
 class EscapeCharacterHandler(Handler):
     # 处理转义字符
 
-    def __init__(self, parser=None) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
 
-    def subFunc(self, match):
+    def sub_func(self, match: re.Match):
         global CONTAINER
         word = match.group(1)
         block = EscapeCharacterBlock(word=word, text="\\" + word)
         return CONTAINER.register(block)
 
     def __call__(self, text: str):
-        text = re.sub(r"\\(.)", self.subFunc, text)
+        text = re.sub(r"\\(.)", self.sub_func, text)
         return text
 
 
 class AnnotateHandler(Handler):
     # 去除注释
 
-    def __init__(self, parser=None) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
 
-    def subFunc(self, match):
+    def sub_func(self, match: re.Match):
         global CONTAINER
         word = match.group()
         block = AnnotateBlock(word=word, text=word)
         return CONTAINER.register(block)
 
     def __call__(self, text: str):
-        text = re.sub(r"\<!--[\s\S]*?--\>", self.subFunc, text)  # 去除注释
+        text = re.sub(r"\<!--[\s\S]*?--\>", self.sub_func, text)  # 去除注释
         return text
 
 
@@ -82,14 +82,14 @@ class HTMLLabelHandler(Handler):
             re.VERBOSE,
         )
 
-    def __call__(self, text: str):
-        def subFunc(match):
-            global CONTAINER
-            src = match.group(0)
-            block = HTMLBlock(text=src, word=src)
-            return CONTAINER.register(block)
+    def sub_func(self, match: re.Match):
+        global CONTAINER
+        src = match.group(0)
+        block = HTMLBlock(text=src, word=src)
+        return CONTAINER.register(block)
 
-        text = re.sub(self.RE, subFunc, text)
+    def __call__(self, text: str):
+        text = re.sub(self.RE, self.sub_func, text)
         text = re.sub(r"^[\n]+", "", text)  # 去除开头连续空换行
         # text = re.sub(r'[\n]+$', '', text)                    # 去除结尾连续空换行
         # text = re.sub(r'[\n]{3,}', '\n\n', text)              # 去除连续换行

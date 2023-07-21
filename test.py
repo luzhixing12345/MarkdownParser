@@ -24,3 +24,11 @@ class TestMyMdParser(unittest.TestCase):
         MarkdownParser.parse_file_toc("./testfiles/test9.md")
         MarkdownParser.parse_file_toc("./testfiles/test10.md")
         MarkdownParser.parse_file_toc("./testfiles/test11.md")
+        MarkdownParser.parse_file_toc("./testfiles/test12.md")
+        MarkdownParser.parse_file_toc("./testfiles/test13.md")
+        MarkdownParser.parse_file_toc("./testfiles/test14.md")
+        MarkdownParser.parse_file_toc("./testfiles/test15.md")
+
+
+if __name__ == "__main__":
+    unittest.main()

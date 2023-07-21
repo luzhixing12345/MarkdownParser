@@ -11,7 +11,10 @@ from .block_parser import (
     SpecialTextHandler,
     TableHandler,
     TextHandler,
+    HTMLLabelHandler
 )
+from typing import List
+
 
 
 class TreeParser(Parser):
@@ -341,15 +344,18 @@ class TableBlockOptimizer(Optimizer):
     def __init__(self) -> None:
         super().__init__()
         self.RE = re.compile(r"(?<!\\)\|")
-        self.block_parser = BlockParser()  # 初始化一个block parser 用于解析表格中出现的每一个表项,
+
+        # 初始化一个block parser 用于解析表格中出现的每一个表项
         # 只注册下面这些 Handler, 不解析其他的
-        self.block_parser.register(EmptyBlockHandler(self.block_parser), 100)
-        self.block_parser.register(EscapeCharacterHandler(self.block_parser), 98)
-        self.block_parser.register(PictureHandler(self.block_parser), 15)
-        self.block_parser.register(ReferenceHandler(self.block_parser), 10)
-        self.block_parser.register(SpecialTextHandler(self.block_parser), 5)
-        self.block_parser.register(TableHandler(self.block_parser), 4)
-        self.block_parser.register(TextHandler(self.block_parser), 0)
+        self.block_parser = BlockParser()
+        self.block_parser.register(EmptyBlockHandler(), 100)
+        self.block_parser.register(EscapeCharacterHandler(), 98)
+        self.block_parser.register(HTMLLabelHandler(),90)
+        self.block_parser.register(PictureHandler(), 15)
+        self.block_parser.register(ReferenceHandler(), 10)
+        self.block_parser.register(SpecialTextHandler(), 5)
+        self.block_parser.register(TableHandler(), 4)
+        self.block_parser.register(TextHandler(), 0)
         # 匹配的
         self.table_block_names = ["TableBlock"]
 
@@ -364,7 +370,7 @@ class TableBlockOptimizer(Optimizer):
         table_length = len(table_block.input["alignments"])
         header_text = header_block.input["text"]  # 获取原文
 
-        header = self.RE.split(header_text)
+        header: List[str] = self.RE.split(header_text)
         if len(header) - 2 != table_length:
             return None
 

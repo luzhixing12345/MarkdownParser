@@ -1,6 +1,7 @@
 from .base_class import Parser, Handler, Block, CONTAINER
 from typing import List
 import re
+import html
 
 
 class BlockParser(Parser):
@@ -66,8 +67,8 @@ class AnnotateBlock(Block):
 class EmptyBlockHandler(Handler):
     # 处理空行
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
 
     def match(self, text: str):
         return not text.strip()
@@ -85,16 +86,14 @@ class EmptyBlock(Block):
 
 
 class EscapeCharacterHandler(Handler):
-    # 解释一下这里
-    # 这里的方法名和preprocess_parser中有着同名方法EscapeCharacterHandler
-    # 这里用于处理恢复为纯文本后再处理的情况, 因为预处理阶段优先级较高
-    # 对于类似table的匹配会出现重新恢复文本,分割后再依次匹配的情况
+    # preprocess_parser中有着同名方法EscapeCharacterHandler
+    # 但修改了其 __call__ 参数
 
-    def __init__(self, parser=None) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"\\(.)")
 
-    def subFunc(self, match):
+    def sub_func(self, match: re.Match):
         global CONTAINER
         word = match.group(1)
         block = EscapeCharacterBlock(word=word, text="\\" + word)
@@ -104,7 +103,7 @@ class EscapeCharacterHandler(Handler):
     def __call__(self, root: Block, text: str):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
-        new_text = re.sub(self.RE, self.subFunc, text)
+        new_text = re.sub(self.RE, self.sub_func, text)
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -154,8 +153,41 @@ class EscapeCharacterBlock(Block):
             return "\\" + self.input["word"]
 
 
-# 已废弃
+class HTMLLabelHandler(Handler):
+    # preprocess_parser 中有着同名方法 HTMLLabelHandler
+    # 但修改了其 __call__ 参数
 
+    def __init__(self) -> None:
+        super().__init__()
+
+        self.RE = re.compile(
+            r"""
+            (<div[\s\S]*?>[\s\S]*?<\/div>|         # div
+            <span[\s\S]*?>[\s\S]*?<\/span>|        # span
+            <p[\s\S]*?>[\s\S]*?<\/p>|            # p
+            <img[\s\S]*?>(?:<\/img>)?|   # image
+            <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
+            <br\/?>|
+            <kbd>[\s\S]*?</kbd>
+            )""",
+            re.VERBOSE,
+        )
+
+    def sub_func(self, match: re.Match):
+        global CONTAINER
+        src = match.group(0)
+        block = HTMLBlock(text=src, word=src)
+        return CONTAINER.register(block)
+
+    def __call__(self, root: Block, text: str):
+        self.block = ComplexBlock(text=text)
+        # 替换所有匹配项并重新解析new_text
+        new_text = re.sub(self.RE, self.sub_func, text)
+        self.parser.match(self.block, new_text)
+        # 单匹配去掉外层 ComplexBlock
+        if len(self.block.sub_blocks) == 1:
+            self.block = self.block.sub_blocks[0]
+        root.addBlock(self.block)
 
 class ExtensionBlockHandler(Handler):  # pragma: no cover
     # 自定义扩展
@@ -163,8 +195,8 @@ class ExtensionBlockHandler(Handler):  # pragma: no cover
     # asdklja
     # {%end%}
 
-    def __init__(self, parser=None) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(
             r"""(
             (^{[ ]*%[ ]*note[ ]*%[ ]*}[ ]*)|
@@ -202,8 +234,8 @@ class ExtensionBlock(Block):  # pragma: no cover
 
 
 class SplitBlockHandler(Handler):
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^[-=\*]{3,} *$")  # 分隔符
 
     def __call__(self, root: Block, text: str):
@@ -227,8 +259,8 @@ class HierarchyIndentHandler(Handler):
     #   hello world
     #   good luck
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^([ ]{1,})(.*)")
 
     def __call__(self, root: Block, text: str):
@@ -256,8 +288,8 @@ class CodeBlockHandler(Handler):
     # a = 1
     # ```
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"`{3,}(.*)")
 
     def __call__(self, root: Block, text: str):
@@ -279,8 +311,7 @@ class CodeBlock(Block):
 
     def toHTML(self):
         code = self.input["code"]
-        code = re.sub("<", "&lt;", code)
-        code = re.sub(">", "&gt;", code)
+        code = html.escape(code)
         language = self.input["language"]
         return f'<pre><code class="language-{language}">{code}</code></pre>'
 
@@ -289,10 +320,8 @@ class HashHeaderHandler(Handler):
     # 匹配标题
     # ### 123
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
-        self.parser = parser
-
+    def __init__(self) -> None:
+        super().__init__()
         # #开头,1-6个#均可 + 一个空格 + 文字
         # Typora               r'(^#{1,6}) (.+)'
         # Markdown All in One  r'(^#{1,6}) (.?)'
@@ -340,11 +369,11 @@ class HashHeaderBlock(Block):
 
 
 class TaskListHandler(Handler):
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"(?<=^[-+\*] )\[([ x])\] (.*)")
 
-    def subFunc(self, match: re.Match):
+    def sub_func(self, match: re.Match):
         is_complete = match.group(1)
         word = match.group(2)
 
@@ -355,7 +384,7 @@ class TaskListHandler(Handler):
     def __call__(self, root: Block, text: str):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
-        new_text = re.sub(self.RE, self.subFunc, text)
+        new_text = re.sub(self.RE, self.sub_func, text)
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -378,8 +407,8 @@ class OListHandler(Handler):
     # 1. 123
     # 2. 123
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^(\d+)\. (.*)")
 
     def __call__(self, root: Block, text: str):
@@ -408,8 +437,8 @@ class OListBlock(Block):
 
 
 class UListHandler(Handler):
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^[-+\*] (.*)")
 
     def __call__(self, root: Block, text: str):
@@ -437,8 +466,8 @@ class UListBlock(Block):
 class QuoteHandler(Handler):
     # 匹配引用
     # > 123
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^>[ ]*(.*)")
 
     def __call__(self, root: Block, text: str):
@@ -465,11 +494,11 @@ class PictureHandler(Handler):
     # 匹配图片
     # ![asd](123)
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"!\[([^\!\[\]]*?)\]\((.*?)\)")
 
-    def subFunc(self, match: re.Match):
+    def sub_func(self, match: re.Match):
         word = match.group(1)
         url = match.group(2)
         pic_block = PictureBlock(word=word, url=url, text=match.group())
@@ -479,7 +508,7 @@ class PictureHandler(Handler):
     def __call__(self, root: Block, text: str):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
-        new_text = re.sub(self.RE, self.subFunc, text)
+        new_text = re.sub(self.RE, self.sub_func, text)
 
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
@@ -503,8 +532,8 @@ class ReferenceHandler(Handler):
     # 处理引用
     # [1](abc)
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         # 匹配嵌套 + 忽略末尾多余 )
 
         # Typora               r'\[([^\[\]]*?)\]\((.*?)\)'
@@ -512,13 +541,13 @@ class ReferenceHandler(Handler):
         self.RE = re.compile(
             r"""(
             \[(.*?)\]\((.*?)\)|
-            <(https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?)>|
-            \bhttps?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?\b
+            <(https?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?(?:;[\w\-\.,@?^=%&:\/~\+#=]*)?)>|
+            \bhttps?:\/\/[\w\-_]+(?:\.[\w\-_]+)+(?:[\w\-\.,@?^=%&:\/~\+#]*[\w\-\@?^=%&\/~\+#])?(?:;[\w\-\.,@?^=%&:\/~\+#=]*)?\b
         )""",
             re.VERBOSE,
         )
 
-    def subFunc(self, match: re.Match):
+    def sub_func(self, match: re.Match):
         word = match.group(2)
         url = match.group(3)
 
@@ -536,7 +565,7 @@ class ReferenceHandler(Handler):
     def __call__(self, root: Block, text: str):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
-        new_text = re.sub(self.RE, self.subFunc, text)
+        new_text = re.sub(self.RE, self.sub_func, text)
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -563,8 +592,8 @@ class SpecialTextHandler(Handler):
     # 处理特殊字符
     # 不考虑 * 的多级嵌套
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(
             r"""(
             \*{3}(.+?)\*{3}|                           # 粗体+斜体
@@ -585,7 +614,7 @@ class SpecialTextHandler(Handler):
             7: "highlight",
         }
 
-    def subFunc(self, match: re.Match):
+    def sub_func(self, match: re.Match):
         for k, v in self.groupid_tag.items():
             if match.group(k):
                 word = match.group(k)
@@ -598,7 +627,7 @@ class SpecialTextHandler(Handler):
     def __call__(self, root: Block, text: str):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
-        new_text = re.sub(self.RE, self.subFunc, text)
+        new_text = re.sub(self.RE, self.sub_func, text)
 
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
@@ -632,8 +661,8 @@ class TableHandler(Handler):
     # 处理表格
     # 不想支持原生表格...
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
         self.RE = re.compile(r"^\|(?: *:?-{1,}:? *\|)+")  # 判断表格出现
 
     def __call__(self, root: Block, text: str):
@@ -686,8 +715,8 @@ class TableBlock(Block):
 class TextHandler(Handler):
     # 处理常规文本
 
-    def __init__(self, parser) -> None:
-        super().__init__(parser)
+    def __init__(self) -> None:
+        super().__init__()
 
     def match(self, text: str):
         return True
@@ -733,27 +762,26 @@ class TextBlock(Block):
     def toHTML(self):
         # fix bug: 修复一些 <abc> 这种虽然不匹配网址, 但是会被 html 解析为标签的情况
         # 见 test14.md
-        self.input["word"] = self.input["word"].replace("<", "&lt").replace(">", "&gt")
-
+        self.input["word"] = html.escape(self.input["word"])
         return self.input["word"]
 
 
 def buildBlockParser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
-    block_parser.register(EmptyBlockHandler(block_parser), 100)
-    block_parser.register(EscapeCharacterHandler(block_parser), 98)
-    block_parser.register(SplitBlockHandler(block_parser), 95)
-    block_parser.register(HierarchyIndentHandler(block_parser), 90)
-    block_parser.register(HashHeaderHandler(block_parser), 80)
-    block_parser.register(TaskListHandler(block_parser), 70)
-    block_parser.register(OListHandler(block_parser), 60)
-    block_parser.register(UListHandler(block_parser), 50)
-    block_parser.register(QuoteHandler(block_parser), 40)
-    block_parser.register(CodeBlockHandler(block_parser), 30)
-    block_parser.register(PictureHandler(block_parser), 15)
-    block_parser.register(ReferenceHandler(block_parser), 10)
-    block_parser.register(SpecialTextHandler(block_parser), 5)
-    block_parser.register(TableHandler(block_parser), 4)
-    block_parser.register(TextHandler(block_parser), 0)
+    block_parser.register(EmptyBlockHandler(), 100)
+    block_parser.register(EscapeCharacterHandler(), 98)
+    block_parser.register(SplitBlockHandler(), 95)
+    block_parser.register(HierarchyIndentHandler(), 90)
+    block_parser.register(HashHeaderHandler(), 80)
+    block_parser.register(TaskListHandler(), 70)
+    block_parser.register(OListHandler(), 60)
+    block_parser.register(UListHandler(), 50)
+    block_parser.register(QuoteHandler(), 40)
+    block_parser.register(CodeBlockHandler(), 30)
+    block_parser.register(PictureHandler(), 15)
+    block_parser.register(ReferenceHandler(), 10)
+    block_parser.register(SpecialTextHandler(), 5)
+    block_parser.register(TableHandler(), 4)
+    block_parser.register(TextHandler(), 0)
     return block_parser
