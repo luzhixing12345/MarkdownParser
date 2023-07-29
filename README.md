@@ -37,6 +37,8 @@ def parse_toc(text: str) -> str:
 def parse_file_toc(file_name: str) -> str:
 ```
 
+接口类 Markdown, Block
+
 ## 结果预览与 Markdown 功能测试
 
 本仓库下提供了了一个快速验证转换结果的工具 generate.py
