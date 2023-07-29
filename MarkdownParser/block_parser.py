@@ -189,6 +189,7 @@ class HTMLLabelHandler(Handler):
             self.block = self.block.sub_blocks[0]
         root.addBlock(self.block)
 
+
 class ExtensionBlockHandler(Handler):  # pragma: no cover
     # 自定义扩展
     # {% note %}
@@ -766,7 +767,7 @@ class TextBlock(Block):
         return self.input["word"]
 
 
-def buildBlockParser():
+def build_block_parser():
     # block parser 用于逐行处理文本, 并将结果解析为一颗未优化的树
     block_parser = BlockParser()
     block_parser.register(EmptyBlockHandler(), 100)

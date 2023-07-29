@@ -5,8 +5,7 @@ import sys
 # python generate.py <FILE_NAME>
 #
 # python generate.py ./testfiles/test1.md
-# html = MarkdownParser.parse_file(sys.argv[1])
-html = MarkdownParser.parse_file(sys.argv[1])
+html = MarkdownParser.parse_file_toc(sys.argv[1])
 
 with open('./template.html', 'r', encoding='utf-8') as f:
     html_template = f.read()

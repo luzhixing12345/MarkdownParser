@@ -9,7 +9,7 @@
 
 ### key 不信任的问题
 
-### unknown type name ‘Elf64_Xword’
+### unknown type name 'Elf64_Xword'
 
 ### Failed to generate BTF for vmlinux
 

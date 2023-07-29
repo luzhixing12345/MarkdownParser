@@ -11,10 +11,9 @@ from .block_parser import (
     SpecialTextHandler,
     TableHandler,
     TextHandler,
-    HTMLLabelHandler
+    HTMLLabelHandler,
 )
 from typing import List
-
 
 
 class TreeParser(Parser):
@@ -350,7 +349,7 @@ class TableBlockOptimizer(Optimizer):
         self.block_parser = BlockParser()
         self.block_parser.register(EmptyBlockHandler(), 100)
         self.block_parser.register(EscapeCharacterHandler(), 98)
-        self.block_parser.register(HTMLLabelHandler(),90)
+        self.block_parser.register(HTMLLabelHandler(), 90)
         self.block_parser.register(PictureHandler(), 15)
         self.block_parser.register(ReferenceHandler(), 10)
         self.block_parser.register(SpecialTextHandler(), 5)
@@ -546,7 +545,7 @@ class SpecialTextOptimizer(Optimizer):
                 root.sub_blocks[i] = TextBlock(text=origin_text, word=origin_text)
 
 
-def buildTreeParser():
+def build_tree_parser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
     tree_parser.register(HierarchyMerge(), 100)

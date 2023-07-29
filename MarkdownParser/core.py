@@ -1,6 +1,8 @@
-from .preprocess_parser import buildPreprocessParser
-from .block_parser import buildBlockParser
-from .tree_parser import buildTreeParser
+
+import os
+from .preprocess_parser import build_preprocess_parser
+from .block_parser import build_block_parser, HashHeaderBlock, Block
+from .tree_parser import build_tree_parser
 
 
 class Markdown:
@@ -8,9 +10,9 @@ class Markdown:
         self.build_parser()
 
     def build_parser(self):
-        self.preprocess_parser = buildPreprocessParser()
-        self.block_parser = buildBlockParser()
-        self.tree_parser = buildTreeParser()
+        self.preprocess_parser = build_preprocess_parser()
+        self.block_parser = build_block_parser()
+        self.tree_parser = build_tree_parser()
 
     def parse(self, text: str) -> str:
         # 去除空行/注释/html标签
@@ -24,7 +26,7 @@ class Markdown:
         # tree.info()
         # 输出到屏幕 / 导出html文件
         return tree.toHTML()
-
+    
     def parse_with_tag(self, text: str):
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
@@ -35,17 +37,20 @@ class Markdown:
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
         # 输出到屏幕 / 导出html文件
-        header_navigater = self.get_header_list(tree)
+        header_navigater = self.get_toc(tree)
         return tree.toHTML(header_navigater)
 
-    def get_header_list(self, tree):
+    def get_toc(self, tree:Block):
+        '''
+        tree 为解析的目录树, 返回一个 html 目录树
+        '''
         UID = 0
         H0_block = []
-        activate_block = None  # 激活节点
+        activate_block: HashHeaderBlock = None  # 激活节点
         activate_block_level = 0
         for block in tree.sub_blocks:
             # 对所有 HashHeaderBlock 统计树结构
-            if block.block_name == "HashHeaderBlock":
+            if isinstance(block, HashHeaderBlock):
                 current_head_level = block.input["level"]
                 # 第一次匹配
                 if activate_block is None:
@@ -117,7 +122,7 @@ class Markdown:
         navigator_html = f'<div class="header-navigator">{navigator_html}</div>'
         return navigator_html
 
-    def _get_header_navigator(self, block):
+    def _get_header_navigator(self, block: HashHeaderBlock):
         navigator_html = ""
         level = block.input["level"]
         tag = f"h{str(level)}-{str(block.UID)}"
@@ -133,9 +138,7 @@ class Markdown:
         return navigator_html
 
 
-def parse(
-    text: str,
-) -> str:
+def parse(text: str) -> str:
     """
     解析 markdown 文本转 html
     """
@@ -153,11 +156,12 @@ def parse_file(file_name: str) -> str:
     """
     解析 md 文件转 html
     """
+    if not os.path.exists(file_name): # pragma: no cover
+        print(f"fail to find {file_name}")
     with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
     return parse(text)
-
 
 def parse_toc(text: str) -> str:
     """

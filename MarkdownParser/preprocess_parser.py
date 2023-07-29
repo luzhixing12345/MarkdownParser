@@ -97,7 +97,7 @@ class HTMLLabelHandler(Handler):
         return text
 
 
-def buildPreprocessParser():
+def build_preprocess_parser():
     # preprocess parser 用于预处理空行/注释/HTML标签
     preprocess_parser = PreprocessParser()
     preprocess_parser.register(TabHandler(), priority=100)
