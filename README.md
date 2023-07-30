@@ -87,7 +87,7 @@ def parse(self, text: str) -> str:
 ## HTML 结果说明
 
 - 生成的结果如下 `<div class='markdown-body'>markdown内容</div>`
-- 代码段会根据语言为 code 加入一个类名便于后期高亮,例如 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
+- 代码段会根据语言为 pre 加入一个类名便于后期高亮,例如 `class="language-cpp"`, 未定义语言则为 `language-UNKNOWN`
 - 默认导出的HTML中层级任务列表会有显示问题,这是因为使用了ul+li+checkbox的方式,您需要添加以下css样式修正
 
   ```css

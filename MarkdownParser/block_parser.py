@@ -314,7 +314,7 @@ class CodeBlock(Block):
         code = self.input["code"]
         code = html.escape(code)
         language = self.input["language"]
-        return f'<pre"><code class="language-{language}>{code}</code></pre>'
+        return f'<pre class="language-{language}"><code>{code}</code></pre>'
 
 
 class HashHeaderHandler(Handler):

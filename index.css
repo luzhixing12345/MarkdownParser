@@ -1016,3 +1016,9 @@ td {
   vertical-align: top;
   border-bottom: 1px solid #ccc;
 }
+
+
+pre[class^="language-"] {
+    background: black;
+    color: white;
+}
