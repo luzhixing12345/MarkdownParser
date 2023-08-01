@@ -161,3 +161,11 @@ int parseline(const char *cmdline, char **argv) {
 ```
 
 - `闭包` 符号:* 字符串集合R的闭包是指把R与自身连接零次或者多次形成的所有集合的并集, 记作 `R*`.
+- **XBOX_ARG_BOOLEAN**: 适用于单参数, 例如 `-h`, 后面不需要跟其他参数信息
+- **XBOX_ARG_INT**: 表示参数接收的应该是一个 int 类型的数字, 例如 `-i 100`
+- **XBOX_ARG_STR**: 表示参数接收的应该是一个 char* 类型的字符串, 例如 `-s "hello world"` `-s nihao`
+- **XBOX_ARG_INT_GROUP**: 表示接收一个组, 组中只有一个元素, 组的数据类型是 int
+- **XBOX_ARG_INT_GROUPS**: 表示接收一个组, 组中至少有一个元素, 组的数据类型是 int
+- **XBOX_ARG_STR_GROUP**: 表示接收一个组, 组的数据类型是 char*
+- **XBOX_ARG_STR_GROUPS**: 表示接收一个组, 组中至少有一个元素, 组的数据类型是 char*
+- **XBOX_ARG_END**: 表示结束, 添加在 options 数组的结尾
