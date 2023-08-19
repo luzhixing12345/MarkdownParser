@@ -144,6 +144,7 @@ class EscapeCharacterBlock(Block):
             "&",
             ";",
             ":",
+            "_"
         ]
 
     def toHTML(self):
