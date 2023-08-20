@@ -599,9 +599,9 @@ class SpecialTextHandler(Handler):
         self.RE = re.compile(
             r"""(
             `(?P<highlight>.+?)`|                                 # 高亮
-            \*{3}(?P<bold_italics>[^ ][^`]+?[^ ])\*{3}|           # 粗体+斜体
-            \*{2}(?P<bold>[^ ][^`]+?[^ ])\*{2}|                   # 粗体
-            \*(?P<italic>[^ ][^`]+?[^ ])\*|                       # 斜体
+            \*{3}(?P<bold_italics>[^ ][^`]*?[^ ])\*{3}|           # 粗体+斜体
+            \*{2}(?P<bold>[^ ][^`]*?[^ ])\*{2}|                   # 粗体
+            \*(?P<italic>[^ ][^`]*?[^ ])\*|                       # 斜体
             ~~(?P<delete>[^`]+?)~~                                # 删除线
         )""",
             re.VERBOSE,
@@ -622,6 +622,7 @@ class SpecialTextHandler(Handler):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.sub_func, text)
+
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
