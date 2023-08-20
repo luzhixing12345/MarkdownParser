@@ -36,6 +36,7 @@ class Markdown:
         # root.info()
         # 优化,得到正确的markdown解析树
         tree = self.tree_parser(root)
+        # tree.info()
         # 输出到屏幕 / 导出html文件
         header_navigater = self.get_toc(tree)
         return tree.toHTML(header_navigater)
