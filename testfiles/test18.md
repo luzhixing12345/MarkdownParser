@@ -12,3 +12,5 @@ A brief description of what the program does and how it works.
 
 Additional description of the program after the description of the arguments.
 ```
+
+**xargparse 使用了动态内存分配, 所以最后请注意使用 `XBOX_free_argparse` 释放内存**

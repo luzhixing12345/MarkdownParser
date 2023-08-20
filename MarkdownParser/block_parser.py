@@ -144,7 +144,7 @@ class EscapeCharacterBlock(Block):
             "&",
             ";",
             ":",
-            "_"
+            "_",
         ]
 
     def toHTML(self):
@@ -598,30 +598,22 @@ class SpecialTextHandler(Handler):
         super().__init__()
         self.RE = re.compile(
             r"""(
-            \*{3}([^ ].+?[^ ])\*{3}|                           # 粗体+斜体
-            \*{2}([^ ].+?[^ ])\*{2}|                           # 粗体
-            \*([^ ].+?[^ ])\*|                                 # 斜体
-            ~~(.+?)~~|                                 # 删除线
-            ``(.+?)``|                                 # 高亮
-            `(.+?)`                                    # 高亮
+            `(?P<highlight>.+?)`|                                 # 高亮
+            \*{3}(?P<bold_italics>[^ ][^`]+?[^ ])\*{3}|           # 粗体+斜体
+            \*{2}(?P<bold>[^ ][^`]+?[^ ])\*{2}|                   # 粗体
+            \*(?P<italic>[^ ][^`]+?[^ ])\*|                       # 斜体
+            ~~(?P<delete>[^`]+?)~~                                # 删除线
         )""",
             re.VERBOSE,
         )
-        self.groupid_tag = {
-            2: "bold+italics",
-            3: "bold",
-            4: "italic",
-            5: "delete",
-            6: "highlight",
-            7: "highlight",
-        }
 
     def sub_func(self, match: re.Match):
-        for k, v in self.groupid_tag.items():
-            if match.group(k):
-                word = match.group(k)
-                tag = v
+        for group_name, group_value in match.groupdict().items():
+            if group_value is not None:
+                word = match.group(group_name)
+                tag = group_name
                 break
+
         special_text_block = SpecialTextBlock(word=word, tag=tag, text=match.group())
         replace_name = self.block.register(special_text_block)  # 注册并替换名字
         return replace_name
@@ -630,7 +622,6 @@ class SpecialTextHandler(Handler):
         self.block = ComplexBlock(text=text)
         # 替换所有匹配项并重新解析new_text
         new_text = re.sub(self.RE, self.sub_func, text)
-
         self.parser.match(self.block, new_text)
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
@@ -647,7 +638,7 @@ class SpecialTextBlock(Block):
         content = ""
         for block in self.sub_blocks:
             content += block.toHTML()
-        if tag == "bold+italics":
+        if tag == "bold_italics":
             return f"<i><b>{content}</b></i>"
         elif tag == "bold":
             return f"<b>{content}</b>"
