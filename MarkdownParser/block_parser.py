@@ -599,9 +599,9 @@ class SpecialTextHandler(Handler):
         self.RE = re.compile(
             r"""(
             `(?P<highlight>.+?)`|                                 # 高亮
-            \*{3}(?P<bold_italics>[^ ][^`]*?[^ ])\*{3}|           # 粗体+斜体
-            \*{2}(?P<bold>[^ ][^`]*?[^ ])\*{2}|                   # 粗体
-            \*(?P<italic>[^ ][^`]*?[^ ])\*|                       # 斜体
+            \*{3}(?P<bold_italics>[^ ][^`]*?)\*{3}|           # 粗体+斜体
+            \*{2}(?P<bold>[^ ][^`]*?)\*{2}|                   # 粗体
+            \*(?P<italic>[^ ][^`]*?)\*|                       # 斜体
             ~~(?P<delete>[^`]+?)~~                                # 删除线
         )""",
             re.VERBOSE,
