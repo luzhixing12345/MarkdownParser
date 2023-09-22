@@ -142,6 +142,7 @@ class CodeBlockOptimizer(Optimizer):
         activite_CodeBlock = None
         restore_text = False
         new_sub_blocks = []
+        list_hierarchy_indent = 0
 
         for i in range(len(root.sub_blocks)):
             block: Block = root.sub_blocks[i]
@@ -155,12 +156,21 @@ class CodeBlockOptimizer(Optimizer):
                     new_sub_blocks.append(activite_CodeBlock)
                     activite_CodeBlock = None
                     continue
-                
-                activite_CodeBlock.input["code"] += block.input["text"] + "\n"
+                else:
+                    # 对于序列中的层级结构代码段, 需要减去其前面的空格
+                    if block.block_name == 'HierarchyBlock' and list_hierarchy_indent != 0:
+                        # print(block.input["text"])
+                        code_lines = block.input["text"].split('\n')
+                        for code_line in code_lines:
+                            activite_CodeBlock.input["code"] += code_line[list_hierarchy_indent:] + '\n'
+                    else:
+                        activite_CodeBlock.input["code"] += block.input["text"] + "\n"
             else:
                 if block.block_name in self.target_block_names:
                     restore_text = True
                     activite_CodeBlock = block
+                    if root.block_name in ['OListBlock', 'UListBlock']:
+                        list_hierarchy_indent = root.input['align_space_number']
                 else:
                     new_sub_blocks.append(block)
 
@@ -551,9 +561,10 @@ class SpecialTextOptimizer(Optimizer):
 def build_tree_parser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
-    tree_parser.register(CodeBlockOptimizer(), 105)
+    
     tree_parser.register(HierarchyMerge(), 100)
     tree_parser.register(QuoteBlockMerge(), 95)
+    tree_parser.register(CodeBlockOptimizer(), 90)
     tree_parser.register(HierarchyEliminate(), 85)
     tree_parser.register(OListSerialOptimizer(), 80)
     tree_parser.register(TableBlockOptimizer(), 60)
