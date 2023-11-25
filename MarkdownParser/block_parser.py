@@ -470,7 +470,7 @@ class QuoteHandler(Handler):
     # > 123
     def __init__(self) -> None:
         super().__init__()
-        self.RE = re.compile(r"^>[ ]*(.*)")
+        self.RE = re.compile(r"^> ?(.*)$")
 
     def __call__(self, root: Block, text: str):
         match_group = re.match(self.RE, text)

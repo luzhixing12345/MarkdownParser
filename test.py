@@ -5,7 +5,7 @@ import unittest
 class TestMyMdParser(unittest.TestCase):
     def test_parse_heading(self):
 
-        test_id = 20
+        test_id = 21
         MarkdownParser.parse("")
         MarkdownParser.parse("# Heading")
         MarkdownParser.parse_toc("")
