@@ -1,0 +1,187 @@
+<div class="header-navigator"></div><div class='markdown-body'><pre class="language-python"><code>&quot;&quot;&quot;
+This program demonstrates how to use all the keywords and syntax in Python
+&quot;&quot;&quot;
+# Importing modules
+import math
+
+# Defining a function
+def greet(name):
+    &quot;&quot;&quot;
+    This function greets the person passed in as a parameter
+    &quot;&quot;&quot;
+    print(f&quot;Hello, {name}!&quot;)
+
+# Using conditional statements
+x = 5
+if x &gt; 0:
+    print(&quot;x is positive&quot;)
+elif x &lt; 0:
+    print(&quot;x is negative&quot;)
+else:
+    print(&quot;x is zero&quot;)
+
+# Using loops
+for i in range(5):
+    print(i)
+
+# Using lists and list comprehension
+fruits = [&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;]
+new_list = [x for x in fruits if &quot;a&quot; in x]
+print(new_list)
+
+# Using dictionaries
+person = {&quot;name&quot;: &quot;John&quot;, &quot;age&quot;: 36, &quot;country&quot;: &quot;Norway&quot;}
+print(person)
+
+# Using sets
+thisset = {&quot;apple&quot;, &quot;banana&quot;, &quot;cherry&quot;}
+thisset.add(&quot;orange&quot;)
+print(thisset)
+
+# Using try-except blocks
+try:
+    print(x)
+except NameError:
+    print(&quot;Variable x is not defined&quot;)
+except:
+    print(&quot;Something else went wrong&quot;)
+
+# Using lambda functions
+x = lambda a : a + 10
+print(x(5))
+
+# Using classes and objects
+class Person:
+    def __init__(self, name, age):
+        self.name = name
+        self.age = age
+
+p1 = Person(&quot;John&quot;, 36)
+print(p1.name)
+print(p1.age)
+
+# Using recursion
+def factorial(n):
+    if n == 1:
+        return 1
+    else:
+        return n * factorial(n-1)
+
+print(factorial(5))</code></pre><pre class="language-c"><code>/*
+ *Copyright (c) 2023 All rights reserved
+ *@description: 有关信号处理的四个系统调用 中断处理程序中处理信号的函数 =&gt;
+ *do_signal
+ *@author: Zhixing Lu
+ *@date: 2023-03-17
+ *@email: luzhixing12345@163.com
+ *@Github: luzhixing12345
+ */
+
+#include &lt;asm/segment.h&gt;
+#include &lt;linux/kernel.h&gt;
+#include &lt;linux/sched.h&gt;
+#include &lt;signal.h&gt;
+
+volatile void do_exit(int error_code);
+
+int sys_sgetmask() {
+    return current-&gt;blocked;
+}
+
+int sys_ssetmask(int newmask) {
+    int old = current-&gt;blocked;
+
+    current-&gt;blocked = newmask &amp; ~(1 &lt;&lt; (SIGKILL - 1));
+    return old;
+}
+
+static inline void save_old(char *from, char *to) {
+    int i;
+
+    verify_area(to, sizeof(struct sigaction));
+    for (i = 0; i &lt; sizeof(struct sigaction); i++) {
+        put_fs_byte(*from, to);
+        from++;
+        to++;
+    }
+}
+
+static inline void get_new(char *from, char *to) {
+    int i;
+
+    for (i = 0; i &lt; sizeof(struct sigaction); i++)
+        *(to++) = get_fs_byte(from++);
+}
+
+int sys_signal(int signum, long handler, long restorer) {
+    struct sigaction tmp;
+
+    if (signum &lt; 1 || signum &gt; 32 || signum == SIGKILL)
+        return -1;
+    tmp.sa_handler = (void (*)(int))handler;
+    tmp.sa_mask = 0;
+    tmp.sa_flags = SA_ONESHOT | SA_NOMASK;
+    tmp.sa_restorer = (void (*)(void))restorer;
+    handler = (long)current-&gt;sigaction[signum - 1].sa_handler;
+    current-&gt;sigaction[signum - 1] = tmp;
+    return handler;
+}
+
+int sys_sigaction(int signum, const struct sigaction *action,
+                  struct sigaction *oldaction) {
+    struct sigaction tmp;
+
+    if (signum &lt; 1 || signum &gt; 32 || signum == SIGKILL)
+        return -1;
+    tmp = current-&gt;sigaction[signum - 1];
+    get_new((char *)action, (char *)(signum - 1 + current-&gt;sigaction));
+    if (oldaction)
+        save_old((char *)&amp;tmp, (char *)oldaction);
+    if (current-&gt;sigaction[signum - 1].sa_flags &amp; SA_NOMASK)
+        current-&gt;sigaction[signum - 1].sa_mask = 0;
+    else
+        current-&gt;sigaction[signum - 1].sa_mask |= (1 &lt;&lt; (signum - 1));
+    return 0;
+}
+
+void do_signal(long signr, long eax, long ebx, long ecx, long edx, long fs,
+               long es, long ds, long eip, long cs, long eflags,
+               unsigned long *esp, long ss) {
+    unsigned long sa_handler;
+    long old_eip = eip;
+    struct sigaction *sa = current-&gt;sigaction + signr - 1;
+    int longs;
+    unsigned long *tmp_esp;
+
+    sa_handler = (unsigned long)sa-&gt;sa_handler;
+    if (sa_handler == 1)
+        return;
+    if (!sa_handler) {
+        if (signr == SIGCHLD)
+            return;
+        else
+            do_exit(1 &lt;&lt; (signr - 1));
+    }
+    if (sa-&gt;sa_flags &amp; SA_ONESHOT)
+        sa-&gt;sa_handler = NULL;
+    *(&amp;eip) = sa_handler;
+    longs = (sa-&gt;sa_flags &amp; SA_NOMASK) ? 7 : 8;
+    *(&amp;esp) -= longs;
+    verify_area(esp, longs * 4);
+    tmp_esp = esp;
+    put_fs_long((long)sa-&gt;sa_restorer, tmp_esp++);
+    put_fs_long(signr, tmp_esp++);
+    if (!(sa-&gt;sa_flags &amp; SA_NOMASK))
+        put_fs_long(current-&gt;blocked, tmp_esp++);
+    put_fs_long(eax, tmp_esp++);
+    put_fs_long(ecx, tmp_esp++);
+    put_fs_long(edx, tmp_esp++);
+    put_fs_long(eflags, tmp_esp++);
+    put_fs_long(old_eip, tmp_esp++);
+    current-&gt;blocked |= sa-&gt;sa_mask;
+}
+</code></pre><pre class="language-c"><code>sdlfjlkjzlkxcj
+
+
+
+</code></pre></div>

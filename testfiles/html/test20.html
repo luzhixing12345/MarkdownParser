@@ -1,0 +1,26 @@
+<div class="header-navigator"></div><div class='markdown-body'><pre class="language-python"><code>class R_XOR(Instruction):
+    def stage_ex(self):
+        self.isa.pipeline_register.value = (
+            self.isa.pipeline_register.rs1 ^ self.isa.pipeline_register.rs2
+        )
+
+    def stage_wb(self):
+        self.isa.registers[self.isa.instruction_info.rd] = self.isa.pipeline_register.value
+        return super().stage_wb()</code></pre><pre class="language-python"><code>class ISA:
+    def stage_ex(self):
+        &quot;&quot;&quot;
+        EX-执行.对指令的各种操作数进行运算
+        &quot;&quot;&quot;
+        self.instruction.stage_ex()
+
+    def stage_mem(self):
+        &quot;&quot;&quot;
+        MEM-存储器访问.将数据写入存储器或从存储器中读出数据
+        &quot;&quot;&quot;
+        self.instruction.stage_mem()
+
+    def stage_wb(self):
+        &quot;&quot;&quot;
+        WB-写回.将指令运算结果存入指定的寄存器
+        &quot;&quot;&quot;
+        self.instruction.stage_wb()</code></pre></div>
