@@ -33,10 +33,10 @@ class ComplexBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)  # pragma: no cover
 
-    def toHTML(self):
+    def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
 
         return content
 
@@ -49,7 +49,7 @@ class HTMLBlock(Block):
     def __str__(self):
         return "<html>"  # pragma: no cover
 
-    def toHTML(self):
+    def to_html(self):
         return self.input["text"]
 
 
@@ -60,7 +60,7 @@ class AnnotateBlock(Block):
     def __str__(self):
         return "<!-->"  # pragma: no cover
 
-    def toHTML(self):
+    def to_html(self):
         return ""
 
 
@@ -74,14 +74,14 @@ class EmptyBlockHandler(Handler):
         return not text.strip()
 
     def __call__(self, root: Block, text: str):
-        root.addBlock(EmptyBlock(text=text))
+        root.add_block(EmptyBlock(text=text))
 
 
 class EmptyBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         return ""
 
 
@@ -108,7 +108,7 @@ class EscapeCharacterHandler(Handler):
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class EscapeCharacterBlock(Block):
@@ -147,7 +147,7 @@ class EscapeCharacterBlock(Block):
             "_",
         ]
 
-    def toHTML(self):
+    def to_html(self):
         if self.input["word"] in self.special_characters:
             return self.input["word"]
         else:
@@ -188,7 +188,7 @@ class HTMLLabelHandler(Handler):
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class ExtensionBlockHandler(Handler):  # pragma: no cover
@@ -220,18 +220,18 @@ class ExtensionBlockHandler(Handler):  # pragma: no cover
                 break
 
         self.block = ExtensionBlock(text=text, tag=tag)
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class ExtensionBlock(Block):  # pragma: no cover
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         tag = self.input["tag"]
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         return f'<div id="{tag}">{content}</div>'
 
 
@@ -241,7 +241,7 @@ class SplitBlockHandler(Handler):
         self.RE = re.compile(r"^[-=\*]{3,} *$")  # 分隔符
 
     def __call__(self, root: Block, text: str):
-        root.addBlock(SplitBlock(text=text))
+        root.add_block(SplitBlock(text=text))
 
 
 class SplitBlock(Block):
@@ -251,7 +251,7 @@ class SplitBlock(Block):
     def __str__(self):  # pragma: no cover
         return "---<hr>---"
 
-    def toHTML(self):
+    def to_html(self):
         return "<hr>"
 
 
@@ -276,7 +276,7 @@ class HierarchyIndentHandler(Handler):
         # 暂时没有更好的修改方法...
         if len(self.block.sub_blocks) == 1:
             self.block.input["text"] = " " * space_number + self.block.sub_blocks[0].input["text"]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class HierarchyBlock(Block):
@@ -316,22 +316,22 @@ class CodeBlockHandler(Handler):
                     )
                     new_text = before_text + pattern.sub(block.register(special_text_block), language)
                     self.parser.match(block, new_text)
-                    root.addBlock(block)
+                    root.add_block(block)
                 else:
                     # 不匹配则以纯文本形式返回
-                    root.addBlock(TextBlock(word=text, text=text))
+                    root.add_block(TextBlock(word=text, text=text))
             else:
                 if before_text.strip() != "":
                     # 奇怪的写法以纯文本形式返回
                     # a```c
                     # int main
-                    root.addBlock(TextBlock(word=text, text=text))
+                    root.add_block(TextBlock(word=text, text=text))
                 else:
                     # 代码段开头
-                    root.addBlock(CodeBlock(language=language, text=text))
+                    root.add_block(CodeBlock(language=language, text=text))
         else:
             # 代码段结尾
-            root.addBlock(CodeBlock(language="UNKNOWN", text=text))
+            root.add_block(CodeBlock(language="UNKNOWN", text=text))
 
 
 class CodeBlock(Block):
@@ -339,7 +339,7 @@ class CodeBlock(Block):
         # code用于在优化阶段用于整合所有的代码
         super().__init__(code="", **kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         code = self.input["code"]
         code = html.escape(code)
         language = self.input["language"]
@@ -365,7 +365,7 @@ class HashHeaderHandler(Handler):
         # 继续匹配header中的文字
         block = HashHeaderBlock(level=level, word=header, text=text)
         self.parser.match(block, header)
-        root.addBlock(block)
+        root.add_block(block)
 
 
 class HashHeaderBlock(Block):
@@ -375,14 +375,14 @@ class HashHeaderBlock(Block):
         self.parent_block = None
         self.UID = None
 
-    def toHTML(self):
+    def to_html(self):
         head_level = str(self.input["level"])
         tag = f"h{head_level}"
         if self.UID is not None:
             tag_id = f'id="{tag}-{str(self.UID)}"'
         else:
             tag_id = ""
-        return f"<{tag} {tag_id}>{self.sub_blocks[0].toHTML()}</{tag}>"
+        return f"<{tag} {tag_id}>{self.sub_blocks[0].to_html()}</{tag}>"
 
     def to_href(self):
         """
@@ -419,14 +419,14 @@ class TaskListHandler(Handler):
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class TaskListBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         checked = "checked" if self.input["complete"] == "x" else ""
         word = self.input["word"]
         return f'<div><input type="checkbox" disabled {checked}>{word}</div>'
@@ -449,17 +449,17 @@ class OListHandler(Handler):
 
         block = OListBlock(serial_number=serial_number, align_space_number=align_space_number, word=word, text=text)
         self.parser.match(block, word)
-        root.addBlock(block)
+        root.add_block(block)
 
 
 class OListBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         serial_number = self.input["serial_number"]
         return f'<ol start="{serial_number}"><li>{content}</li></ol>'
 
@@ -476,17 +476,17 @@ class UListHandler(Handler):
 
         block = UListBlock(word=word, align_space_number=align_space_number, text=text)
         self.parser.match(block, word)
-        root.addBlock(block)
+        root.add_block(block)
 
 
 class UListBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
 
         return f"<ul><li>{content}</li></ul>"
 
@@ -503,17 +503,17 @@ class QuoteHandler(Handler):
         word = match_group.group(1)
         block = QuoteBlock(word=word, text=text)
         self.parser.match(block, word)
-        root.addBlock(block)
+        root.add_block(block)
 
 
 class QuoteBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
 
         return f"<blockquote>{content}</blockquote>"
 
@@ -543,14 +543,14 @@ class PictureHandler(Handler):
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
 
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class PictureBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         word = self.input["word"]
         url = self.input["url"]
         return f'<img src="{url}" alt="{word}">'
@@ -598,7 +598,7 @@ class ReferenceHandler(Handler):
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class ReferenceBlock(Block):
@@ -608,11 +608,11 @@ class ReferenceBlock(Block):
         self.target = "_blank"
         # self.target = '_self'
 
-    def toHTML(self):
+    def to_html(self):
         url = self.input["url"]
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         return f'<a href="{url}" target="{self.target}">{content}</a>'
 
 
@@ -654,18 +654,18 @@ class SpecialTextHandler(Handler):
         # 单匹配去掉外层 ComplexBlock
         if len(self.block.sub_blocks) == 1:
             self.block = self.block.sub_blocks[0]
-        root.addBlock(self.block)
+        root.add_block(self.block)
 
 
 class SpecialTextBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         tag = self.input["tag"]
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         if tag == "bold_italics":
             return f"<i><b>{content}</b></i>"
         elif tag == "bold":
@@ -676,7 +676,7 @@ class SpecialTextBlock(Block):
             return f"<del>{content}</del>"
         elif tag.startswith("highlight"):
             return f"<code>{content}</code>"
-        else: # pragma: no cover
+        else:  # pragma: no cover
             raise ValueError(f"unknown tag {tag}")
 
 
@@ -699,7 +699,7 @@ class TableHandler(Handler):
                 alignments.append("right")
             else:
                 alignments.append("left")
-        root.addBlock(TableBlock(text=text, alignments=alignments))
+        root.add_block(TableBlock(text=text, alignments=alignments))
 
 
 class TableBlock(Block):
@@ -714,12 +714,12 @@ class TableBlock(Block):
         # 将一个table表项添加到Block中
         self.sub_blocks.extend(block.sub_blocks)
 
-    def toHTML(self):
+    def to_html(self):
         alignments = self.input["alignments"]
 
         table_header_content = "<tr>"
         for block in self.input["header"].sub_blocks:
-            table_header_content += f"<th>{block.toHTML()}</th>"
+            table_header_content += f"<th>{block.to_html()}</th>"
         table_header_content += "</tr>"
 
         table_items_content = ""
@@ -728,7 +728,7 @@ class TableBlock(Block):
                 table_items_content += "<tr>"
             align_style = alignments[i % len(alignments)]
             table_items_content += f'<td style="text-align:{align_style}">\
-                {self.sub_blocks[i].toHTML()}</td>'
+                {self.sub_blocks[i].to_html()}</td>'
             if (i + 1) % len(alignments) == 0:
                 table_items_content += "</tr>"
 
@@ -756,7 +756,7 @@ class TextHandler(Handler):
             # 正常文本字符
             if count % 2 == 0:
                 if string:
-                    temp_block.addBlock(TextBlock(word=string, text=string))
+                    temp_block.add_block(TextBlock(word=string, text=string))
             else:
                 id = string[3:-3]
                 class_object: Block = CONTAINER[id]
@@ -765,24 +765,24 @@ class TextHandler(Handler):
                     class_object.restore(TextBlock)
                     temp_block.input["text"] = temp_block.input["text"].replace(string, replace_str)
                     root.input["text"] = root.input["text"].replace(string, replace_str)
-                    temp_block.addBlock(class_object)
+                    temp_block.add_block(class_object)
                 else:
                     # 由于在解析过程中中间变量使用了{-%.*?%-}的格式进行代替
                     # 所以如果原本的Markdown输入中就包含类似的 {-%asdjkl%-}文字则会出现无法找到的情况
-                    temp_block.addBlock(TextBlock(word=string, text=string))  # pragma: no cover
+                    temp_block.add_block(TextBlock(word=string, text=string))  # pragma: no cover
             count += 1
 
         if len(temp_block.sub_blocks) <= 1:
-            root.addBlock(temp_block.sub_blocks[0])
+            root.add_block(temp_block.sub_blocks[0])
         else:
-            root.addBlock(temp_block)
+            root.add_block(temp_block)
 
 
 class TextBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         # fix bug: 修复一些 <abc> 这种虽然不匹配网址, 但是会被 html 解析为标签的情况
         # 见 test14.md
         self.input["word"] = html.escape(self.input["word"])

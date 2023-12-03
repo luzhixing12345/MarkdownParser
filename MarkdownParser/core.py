@@ -1,4 +1,3 @@
-
 import os
 from .preprocess_parser import build_preprocess_parser
 from .block_parser import build_block_parser, HashHeaderBlock, Block
@@ -25,8 +24,8 @@ class Markdown:
         tree = self.tree_parser(root)
         # tree.info()
         # 输出到屏幕 / 导出html文件
-        return tree.toHTML()
-    
+        return tree.to_html()
+
     def parse_with_tag(self, text: str):
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
@@ -39,12 +38,12 @@ class Markdown:
         # tree.info()
         # 输出到屏幕 / 导出html文件
         header_navigater = self.get_toc(tree)
-        return tree.toHTML(header_navigater)
+        return tree.to_html(header_navigater)
 
-    def get_toc(self, tree:Block):
-        '''
+    def get_toc(self, tree: Block):
+        """
         tree 为解析的目录树, 返回一个 html 目录树
-        '''
+        """
         UID = 0
         H0_block = []
         activate_block: HashHeaderBlock = None  # 激活节点
@@ -157,12 +156,13 @@ def parse_file(file_name: str) -> str:
     """
     解析 md 文件转 html
     """
-    if not os.path.exists(file_name): # pragma: no cover
+    if not os.path.exists(file_name):  # pragma: no cover
         print(f"fail to find {file_name}")
     with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
     return parse(text)
+
 
 def parse_toc(text: str) -> str:
     """

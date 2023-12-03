@@ -6,7 +6,7 @@ class Container:
     # 用于记录全局解析时的中间变量替换
 
     def __init__(self) -> None:
-        self._container:Dict[str,Block] = {
+        self._container: Dict[str, Block] = {
             # block类名-唯一标识符 : block类对象
             #
         }
@@ -40,7 +40,7 @@ CONTAINER = Container()
 
 class Parser:
     def __init__(self) -> None:
-        self._handlers:List[Dict[str, Handler]] = []  # 保存所有注册的方法
+        self._handlers: List[Dict[str, Handler]] = []  # 保存所有注册的方法
         self.is_sorted = False
 
     def _sort(self):
@@ -65,13 +65,13 @@ class Parser:
         new_method = {"priority": priority, "object": handler}
         self._handlers.append(new_method)
 
-    def match(self, root: "Block", text: str): # pragma: no cover
+    def match(self, root: "Block", text: str):  # pragma: no cover
         raise NotImplementedError
 
 
 class Block:
     def __init__(self, **kwargs) -> None:
-        self.input:Dict[str, Union[str, Block]] = kwargs
+        self.input: Dict[str, Union[str, Block]] = kwargs
         self.input["text"]: str  # 输入的纯文本,用于恢复原始信息
         self.input["word"]: str  # 解析提取后的核心文本信息
         self.sub_blocks: List[Block] = []  # 子模块
@@ -93,16 +93,16 @@ class Block:
             # 正常文本字符
             if count % 2 == 0:
                 if string:
-                    self.addBlock(TextBlock(word=string, text=string))
+                    self.add_block(TextBlock(word=string, text=string))
             else:
                 id = string[3:-3]
                 class_object: Block = CONTAINER[id]
                 class_object.restore(TextBlock)
                 self.input["text"] = self.input["text"].replace(string, class_object.input["text"])
-                self.addBlock(class_object)
+                self.add_block(class_object)
             count += 1
 
-    def addBlock(self, block):
+    def add_block(self, block):
         self.sub_blocks.append(block)
 
     def __str__(self):  # pragma: no cover
@@ -131,7 +131,7 @@ class Block:
                 print(f"[{block.__class__.__name__}] {str(block)}")
                 block.info(deep + 1)
 
-    def printInfo(self, deep: int = 0) -> str:  # pragma: no cover
+    def print_info(self, deep: int = 0) -> str:  # pragma: no cover
         # print(root.printInfo())
         # 递归输出信息
         output_str = ""
@@ -141,25 +141,24 @@ class Block:
             for block in self.sub_blocks:
                 output_str += " " * 4 * deep
                 output_str += f"[{block.__class__.__name__}] {str(block)}\n"
-                output_str += block.printInfo(deep + 1)
+                output_str += block.print_info(deep + 1)
             return output_str
 
-    def toHTML(self, header_navigater=None):
+    def to_html(self, header_navigater=None):
         # 转换成HTML格式
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         if header_navigater:
             return f"{header_navigater}<div class='markdown-body'>{content}</div>"
         else:
             return f"<div class='markdown-body'>{content}</div>"
 
 
-
 class Handler:
     def __init__(self) -> None:
         self.RE: re.Pattern = None
-        self.parser:Parser = None
+        self.parser: Parser = None
 
     def match(self, text: str, *args):  # pragma: no cover
         if self.RE is None:
@@ -174,7 +173,7 @@ class Handler:
 class Optimizer:
     def __init__(self) -> None:
         # 优化器针对的Block
-        self.target_block_names:List[str] = []
+        self.target_block_names: List[str] = []
         self.is_match = False
 
     def __call__(self, root: Block):  # pragma: no cover

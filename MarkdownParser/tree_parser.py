@@ -158,11 +158,11 @@ class CodeBlockOptimizer(Optimizer):
                     continue
                 else:
                     # 对于序列中的层级结构代码段, 需要减去其前面的空格
-                    if block.block_name == 'HierarchyBlock' and list_hierarchy_indent != 0:
+                    if block.block_name == "HierarchyBlock" and list_hierarchy_indent != 0:
                         # print(block.input["text"])
-                        code_lines = block.input["text"].split('\n')
+                        code_lines = block.input["text"].split("\n")
                         for code_line in code_lines:
-                            activite_CodeBlock.input["code"] += code_line[list_hierarchy_indent:] + '\n'
+                            activite_CodeBlock.input["code"] += code_line[list_hierarchy_indent:] + "\n"
                     else:
                         # print(block.block_name, block.input["text"])
                         activite_CodeBlock.input["code"] += block.input["text"] + "\n"
@@ -170,8 +170,8 @@ class CodeBlockOptimizer(Optimizer):
                 if block.block_name in self.target_block_names:
                     restore_text = True
                     activite_CodeBlock = block
-                    if root.block_name in ['OListBlock', 'UListBlock']:
-                        list_hierarchy_indent = root.input['align_space_number']
+                    if root.block_name in ["OListBlock", "UListBlock"]:
+                        list_hierarchy_indent = root.input["align_space_number"]
                 else:
                     new_sub_blocks.append(block)
 
@@ -236,15 +236,13 @@ class HierarchyEliminate(Optimizer):
 
             elif block.block_name == "HierarchyBlock":
                 if deeper_indent:
-                    left_space_number = (
-                        block.input["space_number"] - activite_block.input["align_space_number"]
-                    )
+                    left_space_number = block.input["space_number"] - activite_block.input["align_space_number"]
                     # 刚好满足缩进,直接展开
                     if left_space_number == 0:
                         activite_block.sub_blocks.extend(block.sub_blocks)
                     # 空格数多余缩进所需,归入activite_block节点放到下层处理
                     elif left_space_number > 0:
-                        activite_block.addBlock(block)
+                        activite_block.add_block(block)
                     # 空格数少于缩进所需, 归并到根节点
                     else:
                         if activite_block is not None:
@@ -261,12 +259,9 @@ class HierarchyEliminate(Optimizer):
                     if deeper_indent:
                         # 忽略连续的EmptyBlock
                         if activite_block.sub_blocks[-1].block_name != "EmptyBlock":
-                            activite_block.addBlock(block)
+                            activite_block.add_block(block)
                     else:
-                        if (
-                            len(new_sub_blocks) > 1
-                            and new_sub_blocks[-1].block_name == "EmptyBlock"
-                        ):
+                        if len(new_sub_blocks) > 1 and new_sub_blocks[-1].block_name == "EmptyBlock":
                             continue
                         else:
                             new_sub_blocks.append(block)
@@ -330,14 +325,10 @@ class ExtensionOptimizer(Optimizer):  # pragma: no cover
                         activite_block = block
                     # 不支持嵌套使用, 恢复为纯文本
                     else:
-                        activite_block.addBlock(
-                            TextBlock(text=block.input["text"], word=block.input["text"])
-                        )
+                        activite_block.add_block(TextBlock(text=block.input["text"], word=block.input["text"]))
                 elif block.input["tag"] == "end":
                     if activite_block is None:
-                        new_sub_blocks.append(
-                            TextBlock(text=block.input["text"], word=block.input["text"])
-                        )
+                        new_sub_blocks.append(TextBlock(text=block.input["text"], word=block.input["text"]))
                     else:
                         new_sub_blocks.append(activite_block)
                         activite_block = None
@@ -345,7 +336,7 @@ class ExtensionOptimizer(Optimizer):  # pragma: no cover
                     raise KeyError("Unknown tag " + block.input["tag"])
             else:
                 if activite_block is not None:
-                    activite_block.addBlock(block)
+                    activite_block.add_block(block)
                 else:
                     new_sub_blocks.append(block)
 
@@ -460,9 +451,7 @@ class TableBlockOptimizer(Optimizer):
                         new_sub_blocks.pop()
                     else:
                         # 将TableBlock变为纯文本
-                        new_sub_blocks.append(
-                            TextBlock(text=block.input["text"], word=block.input["text"])
-                        )
+                        new_sub_blocks.append(TextBlock(text=block.input["text"], word=block.input["text"]))
                         match_table = False
                 else:
                     # 第一步匹配失败则将 block 回退为 TextBlock
@@ -517,9 +506,9 @@ class ParagraphOptimizer(Optimizer):
                     new_sub_blocks.append(block)
                 elif activite_block is None:
                     activite_block = ParagraphBlock()
-                    activite_block.addBlock(block)
+                    activite_block.add_block(block)
                 else:
-                    activite_block.addBlock(block)
+                    activite_block.add_block(block)
             else:
                 if activite_block is not None:
                     new_sub_blocks.append(activite_block)
@@ -536,15 +525,15 @@ class ParagraphBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def toHTML(self):
+    def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.toHTML()
+            content += block.to_html()
         return f"<p>{content}</p>"
 
 
 class SpecialTextOptimizer(Optimizer):
-    # 将高亮的文本恢复回
+    # 将高亮的文本恢复回初始状态
     def __init__(self) -> None:
         super().__init__()
         self.target_block_names = ["SpecialTextBlock"]
@@ -562,7 +551,7 @@ class SpecialTextOptimizer(Optimizer):
 def build_tree_parser():
     # tree parser 用于优化并得到正确的解析树
     tree_parser = TreeParser()
-    
+
     tree_parser.register(CodeBlockOptimizer(), 105)
     tree_parser.register(HierarchyMerge(), 100)
     tree_parser.register(QuoteBlockMerge(), 95)
