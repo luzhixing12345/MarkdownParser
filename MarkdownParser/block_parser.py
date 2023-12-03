@@ -292,15 +292,43 @@ class CodeBlockHandler(Handler):
 
     def __init__(self) -> None:
         super().__init__()
-        self.RE = re.compile(r"`{3,}(.*)")
+        self.RE = re.compile(r"([^`]*?)(`{3,})(.*)")
 
     def __call__(self, root: Block, text: str):
-        match_group = re.match(self.RE, text)
-        language = match_group.group(1).strip()
+        match_group = re.search(self.RE, text)
+        before_text = match_group.group(1)
+        backtick = match_group.group(2)
+        language = match_group.group(3).strip()
 
         if language:
-            # 代码段开头
-            root.addBlock(CodeBlock(language=language, text=text))
+            # 对于多反引号的情况, 在匹配的情况下处理为 SpecialTextBlock
+            # https://github.com/luzhixing12345/MarkdownParser/issues/6
+            if language.find("`") != -1:
+                pattern = re.compile(r"([^`]*?)(`+)")
+                special_text_group = re.search(pattern, language)
+                word = special_text_group.group(1)
+                end_backtick = special_text_group.group(2)
+                if end_backtick == backtick:
+                    # 反引号数量匹配
+                    block = ComplexBlock(text=text)
+                    special_text_block = SpecialTextBlock(
+                        word=word, tag="highlight", text=f"{backtick}{word}{end_backtick}"
+                    )
+                    new_text = before_text + pattern.sub(block.register(special_text_block), language)
+                    self.parser.match(block, new_text)
+                    root.addBlock(block)
+                else:
+                    # 不匹配则以纯文本形式返回
+                    root.addBlock(TextBlock(word=text, text=text))
+            else:
+                if before_text.strip() != "":
+                    # 奇怪的写法以纯文本形式返回
+                    # a```c
+                    # int main
+                    root.addBlock(TextBlock(word=text, text=text))
+                else:
+                    # 代码段开头
+                    root.addBlock(CodeBlock(language=language, text=text))
         else:
             # 代码段结尾
             root.addBlock(CodeBlock(language="UNKNOWN", text=text))
@@ -419,9 +447,7 @@ class OListHandler(Handler):
         align_space_number = len(serial_number) + 2
         word = match_group.group(2)
 
-        block = OListBlock(
-            serial_number=serial_number, align_space_number=align_space_number, word=word, text=text
-        )
+        block = OListBlock(serial_number=serial_number, align_space_number=align_space_number, word=word, text=text)
         self.parser.match(block, word)
         root.addBlock(block)
 
@@ -598,7 +624,8 @@ class SpecialTextHandler(Handler):
         super().__init__()
         self.RE = re.compile(
             r"""(
-            `(?P<highlight>.+?)`|                                 # 高亮
+            ``(?P<highlight1>.+?)``|
+            `(?P<highlight2>.+?)`|                                 # 高亮
             \*{3}(?P<bold_italics>[^ ][^`]*?)\*{3}|           # 粗体+斜体
             \*{2}(?P<bold>[^ ][^`]*?)\*{2}|                   # 粗体
             \*(?P<italic>[^ ][^`]*?)\*|                       # 斜体
@@ -647,8 +674,10 @@ class SpecialTextBlock(Block):
             return f"<i>{content}</i>"
         elif tag == "delete":
             return f"<del>{content}</del>"
-        elif tag == "highlight":
+        elif tag.startswith("highlight"):
             return f"<code>{content}</code>"
+        else: # pragma: no cover
+            raise ValueError(f"unknown tag {tag}")
 
 
 class TableHandler(Handler):
