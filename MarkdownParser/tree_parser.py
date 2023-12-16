@@ -13,7 +13,7 @@ from .block_parser import (
     TextHandler,
     HTMLLabelHandler,
 )
-from typing import List
+from typing import List, Optional
 import html
 
 
@@ -27,20 +27,21 @@ class TreeParser(Parser):
             self.is_sorted = True
         root.input["align_space_number"] = 0  # 用于 HierarchyEliminate 阶段的对齐空格调整
 
-        self.checkBlock(root)
+        self.check_block(root)
         return root
 
-    def checkBlock(self, block: Block):
+    def check_block(self, block: Block):
         # 深度优先的遍历root的所有节点,
         # 如果遇到相应的可优化项则将节点交由对应的优化器处理
         for optimizer in self._handlers:
             optimizer["object"](block)
-
+            # block.info()
+        
         if block.sub_blocks == []:
             return
         else:
             for sub_block in block.sub_blocks:
-                self.checkBlock(sub_block)
+                self.check_block(sub_block)
 
 
 class HierarchyMerge(Optimizer):
@@ -213,9 +214,9 @@ class HierarchyEliminate(Optimizer):
         if root_align_space_number is None:
             return
 
-        new_sub_blocks = []
-        activite_block = None
-        deeper_indent = False
+        new_sub_blocks:List[Block] = []
+        activite_block: Optional[Block] = None
+        in_hierarchy_indent = False
 
         for i in range(len(root.sub_blocks)):
             block: Block = root.sub_blocks[i]
@@ -223,19 +224,19 @@ class HierarchyEliminate(Optimizer):
                 # 对齐长度从根节点依次传递下去
                 block.input["align_space_number"] += root_align_space_number
                 # 切换
-                if deeper_indent:
+                if in_hierarchy_indent:
                     new_sub_blocks.append(activite_block)
-                deeper_indent = True
+                in_hierarchy_indent = True
                 activite_block = block
             elif block.block_name in self.interrupt_block_names:
-                deeper_indent = False
+                in_hierarchy_indent = False
                 if activite_block is not None:
                     new_sub_blocks.append(activite_block)
                     activite_block = None
                 new_sub_blocks.append(block)
 
             elif block.block_name == "HierarchyBlock":
-                if deeper_indent:
+                if in_hierarchy_indent:
                     left_space_number = block.input["space_number"] - activite_block.input["align_space_number"]
                     # 刚好满足缩进,直接展开
                     if left_space_number == 0:
@@ -248,15 +249,17 @@ class HierarchyEliminate(Optimizer):
                         if activite_block is not None:
                             new_sub_blocks.append(activite_block)
                             activite_block = None
-                            deeper_indent = False
+                            in_hierarchy_indent = False
                         new_sub_blocks.extend(block.sub_blocks)
-                # 递进级层次缩进被打断
                 else:
+                    # 未处于层次递进的状态
+                    self.parser: TreeParser
+                    self.parser.check_block(block)
                     new_sub_blocks.extend(block.sub_blocks)
             else:
                 # EmptyBlock 先补齐在 UList OListBlock 下
                 if block.block_name == "EmptyBlock":
-                    if deeper_indent:
+                    if in_hierarchy_indent:
                         # 忽略连续的EmptyBlock
                         if activite_block.sub_blocks[-1].block_name != "EmptyBlock":
                             activite_block.add_block(block)
@@ -269,7 +272,7 @@ class HierarchyEliminate(Optimizer):
                     if activite_block is not None:
                         new_sub_blocks.append(activite_block)
                         activite_block = None
-                        deeper_indent = False
+                        in_hierarchy_indent = False
                     new_sub_blocks.append(block)
 
         if activite_block is not None:
@@ -555,7 +558,7 @@ def build_tree_parser():
     tree_parser.register(CodeBlockOptimizer(), 105)
     tree_parser.register(HierarchyMerge(), 100)
     tree_parser.register(QuoteBlockMerge(), 95)
-    tree_parser.register(HierarchyEliminate(), 85)
+    tree_parser.register(HierarchyEliminate(), 90)
     tree_parser.register(OListSerialOptimizer(), 80)
     tree_parser.register(TableBlockOptimizer(), 60)
     tree_parser.register(ParagraphOptimizer(), 50)

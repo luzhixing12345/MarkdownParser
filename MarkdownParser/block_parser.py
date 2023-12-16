@@ -165,8 +165,8 @@ class HTMLLabelHandler(Handler):
             r"""
             (<div[\s\S]*?>[\s\S]*?<\/div>|         # div
             <span[\s\S]*?>[\s\S]*?<\/span>|        # span
-            <p[\s\S]*?>[\s\S]*?<\/p>|            # p
-            <img[\s\S]*?>(?:<\/img>)?|   # image
+            <p[\s\S]*?>[\s\S]*?<\/p>|              # p
+            <img[\s\S]*?>(?:<\/img>)?|             # image
             <iframe[\s\S]*?>[\s\S]*?<\/iframe>|    # iframe
             <br\/?>|
             <kbd>[\s\S]*?</kbd>

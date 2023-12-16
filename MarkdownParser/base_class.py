@@ -55,10 +55,9 @@ class Parser:
         if not self.is_sorted:
             self._sort()
         for method in self._handlers:
-            name = method["name"]
             class_name = method["object"].__class__.__name__
             priority = method["priority"]
-            print(f"[{name}]({priority}) : {class_name}")
+            print(f"{class_name}: ({priority})")
 
     def register(self, handler: "Handler", priority: int = 0) -> None:
         handler.parser = self
@@ -174,7 +173,7 @@ class Optimizer:
     def __init__(self) -> None:
         # 优化器针对的Block
         self.target_block_names: List[str] = []
-        self.is_match = False
+        self.parser: Parser = None
 
     def __call__(self, root: Block):  # pragma: no cover
         raise NotImplementedError

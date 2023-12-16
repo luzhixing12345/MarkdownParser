@@ -164,3 +164,4 @@ def parse(self, text: str) -> str:
 - [Github Markdown CSS](https://cdn.jsdelivr.net/npm/github-markdown-css@4.0.0/github-markdown.css)
 - [Mermaid API](https://mermaid.js.org/intro/#mermaid-api)
 - [MathJax](https://docs.mathjax.org/en/latest/web/start.html)
+- [commonmark](https://commonmark.org/)
