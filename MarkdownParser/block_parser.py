@@ -283,6 +283,11 @@ class HierarchyBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
+    def to_html(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_html()
+        return content
 
 class CodeBlockHandler(Handler):
     # 匹配代码段
