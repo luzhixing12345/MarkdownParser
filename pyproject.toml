@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "MarkdownParser"
-version = "0.5.21"
+version = "0.5.23"
 description = "convert Markdown to HTML"
 authors = ["luzhixing12345 <luzhixing12345@163.com>"]
 license = "MIT"

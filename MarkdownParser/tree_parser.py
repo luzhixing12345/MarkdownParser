@@ -531,8 +531,8 @@ class ParagraphBlock(Block):
     def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.to_html()
-        return f"<p>{content}</p>"
+            content += block.to_html() + ' '
+        return f"<p>{content[:-1]}</p>"
 
 
 class SpecialTextOptimizer(Optimizer):
