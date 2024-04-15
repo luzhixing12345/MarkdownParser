@@ -71,8 +71,8 @@ class Parser:
 class Block:
     def __init__(self, **kwargs) -> None:
         self.input: Dict[str, Union[str, Block]] = kwargs
-        self.input["text"]: str  # 输入的纯文本,用于恢复原始信息
-        self.input["word"]: str  # 解析提取后的核心文本信息
+        # self.input["text"]  输入的纯文本,用于恢复原始信息
+        # self.input["word"]  解析提取后的核心文本信息
         self.sub_blocks: List[Block] = []  # 子模块
         self.block_name = self.__class__.__name__
 

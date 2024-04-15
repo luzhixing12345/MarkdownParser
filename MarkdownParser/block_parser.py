@@ -271,12 +271,12 @@ class HierarchyIndentHandler(Handler):
         word = match_group.group(2)
 
         self.block = HierarchyBlock(space_number=space_number, text=text)
+        root.add_block(self.block)
         self.parser.match(self.block, word)
         # 因为多重 Complex 传递的问题导致的 escape 字符的bug(test8.md)
         # 暂时没有更好的修改方法...
         if len(self.block.sub_blocks) == 1:
             self.block.input["text"] = " " * space_number + self.block.sub_blocks[0].input["text"]
-        root.add_block(self.block)
 
 
 class HierarchyBlock(Block):
@@ -288,6 +288,7 @@ class HierarchyBlock(Block):
         for block in self.sub_blocks:
             content += block.to_html()
         return content
+
 
 class CodeBlockHandler(Handler):
     # 匹配代码段
