@@ -18,3 +18,11 @@ https://arthurchiao.art/blog/linux-cfs-design-and-implementation-zh/
 <https://arthurchiao.art/blog/linux-cfs-design-and-implementation-zh/>
 
 https://zhuanlan.zhihu.com/p/472955572
+
+> 内核能抢占了不代表内核一定会抢占,内核会不会抢占由config选项控制(`[CONFIG_PREEMPT](https://cateee.net/lkddb/web-lkddb/PREEMPT.html)`),可以开启也可以关闭,因为内核抢占还会影响系统的响应性和性能.
+> 
+> 开启内核抢占会提高系统的响应性但是会降低一点性能,关闭内核抢占会降低系统的响应性但是会提高一点性能.因此把内核抢占做成配置项,可以让大家灵活配置.
+> 
+> 服务器系统一般不需要与用户交互,所以会关闭内核抢占来提高性能,桌面系统会开启内核抢占来提高系统的响应性,来增加用户体验.
+
+`[sched_yield](https://linux.die.net/man/2/sched_yield)`
