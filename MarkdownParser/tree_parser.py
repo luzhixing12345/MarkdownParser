@@ -36,7 +36,7 @@ class TreeParser(Parser):
         for optimizer in self._handlers:
             optimizer["object"](block)
             # block.info()
-        
+
         if block.sub_blocks == []:
             return
         else:
@@ -214,7 +214,7 @@ class HierarchyEliminate(Optimizer):
         if root_align_space_number is None:
             return
 
-        new_sub_blocks:List[Block] = []
+        new_sub_blocks: List[Block] = []
         activite_block: Optional[Block] = None
         in_hierarchy_indent = False
 
@@ -372,35 +372,31 @@ class TableBlockOptimizer(Optimizer):
         self.header_block_names = ["TextBlock", "ComplexBlock"]
         self.body_block_names = ["TextBlock", "ComplexBlock", "TableBlock"]
 
-    def _createTableBlock(self, header_block: Block, table_block: Block):
+    def create_table_block(self, header_block: Block, table_block: Block):
         # 判断header和table列是否匹配
         # 匹配返回一个TableBlock对象实例,用于后续补充表格
         # 不匹配返回None
         table_length = len(table_block.input["alignments"])
-        header_text = header_block.input["text"]  # 获取原文
-
-        header: List[str] = self.RE.split(header_text)
-        if len(header) - 2 != table_length:
+        header_text: List[str] = self.RE.split(header_block.input["text"])
+        if len(header_text) - 2 != table_length:
             return None
 
-        # 匹配,创建实例
-        header = header[1:-1]
-        for i in range(len(header)):
-            header[i] = header[i].strip()
+        # 去掉开头和结尾的多余项
+        header_text = header_text[1:-1]
+        for i in range(len(header_text)):
+            header_text[i] = header_text[i].strip()
         # 重新解析每一个table的表项
-        table_header_node = self.block_parser(header)
+        table_header_node = self.block_parser(header_text)
 
-        header_info = [i.input["word"] for i in table_header_node.sub_blocks]
-        table_header_node.input["info"] = header_info
         new_table_block = TableBlock(
-            header=table_header_node, alignments=table_block.input["alignments"], length=len(header)
+            header=table_header_node, alignments=table_block.input["alignments"], length=len(header_text)
         )
         return new_table_block
 
-    def _addTableItem(self, table_block: TableBlock, table_item_block: Block):
+    def add_table_item(self, table_block: TableBlock, table_item_block: Block):
         # 添加表格项,多去少补
 
-        table_items = self.RE.split(table_item_block.input["text"])
+        table_items: List[str] = self.RE.split(table_item_block.input["text"])
         if not table_items[0]:
             table_items.pop(0)
         if not table_items[-1]:
@@ -418,7 +414,7 @@ class TableBlockOptimizer(Optimizer):
         for i in range(len(table_item_node.sub_blocks)):
             if table_item_node.sub_blocks[i].__class__.__name__ == "EmptyBlock":
                 table_item_node.sub_blocks[i] = TextBlock(text="", word="")
-        table_block._addTableItem(table_item_node)
+        table_block.add_table_item(table_item_node)
         # table_item_node.info()
 
     def __call__(self, root: Block):
@@ -439,14 +435,14 @@ class TableBlockOptimizer(Optimizer):
                     new_sub_blocks.append(table_block)
                     table_block = None
                 else:
-                    self._addTableItem(table_block, block)
+                    self.add_table_item(table_block, block)
                     continue
             # 尝试匹配 TableBlock, 开头不可以
             if block.block_name in self.table_block_names and i != 0:
                 # 第一步匹配
                 if root.sub_blocks[i - 1].block_name in self.header_block_names:
                     # 第二步匹配
-                    table_block = self._createTableBlock(root.sub_blocks[i - 1], block)
+                    table_block = self.create_table_block(root.sub_blocks[i - 1], block)
                     # 匹配成功
                     if table_block is not None:
                         match_table = True
@@ -531,7 +527,7 @@ class ParagraphBlock(Block):
     def to_html(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.to_html() + ' '
+            content += block.to_html() + " "
         return f"<p>{content[:-1]}</p>"
 
 

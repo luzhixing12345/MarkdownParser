@@ -572,10 +572,10 @@ class ReferenceHandler(Handler):
 
         # Typora               r'\[([^\[\]]*?)\]\((.*?)\)'
         # Markdown All in One  ...
-        
+
         # https://stackoverflow.com/a/163684/17869889
         web_url_pattern = r"(?:https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;()]+[-A-Za-z0-9+&@#/%=~_|]"
-        
+
         self.RE = re.compile(
             rf"""(
             \[(.*?)\]\(({web_url_pattern}|.*?)\)|
@@ -720,7 +720,7 @@ class TableBlock(Block):
         # self.input['length'] 表格列数
         # self.input['table_items'] 每一行的表格项(Block)
 
-    def _addTableItem(self, block: Block):
+    def add_table_item(self, block: Block):
         # 将一个table表项添加到Block中
         self.sub_blocks.extend(block.sub_blocks)
 
