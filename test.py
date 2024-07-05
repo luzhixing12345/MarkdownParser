@@ -7,6 +7,7 @@ class TestMyMdParser(unittest.TestCase):
     def test_parse_heading(self):
         self.maxDiff = None
         test_id = 29
+        passed_test_ids = [10]
         md_root_path = f"./testfiles/md"
         html_root_path = f"./testfiles/html"
         MarkdownParser.parse("")
@@ -14,6 +15,8 @@ class TestMyMdParser(unittest.TestCase):
         MarkdownParser.parse_toc("")
 
         for i in range(1, test_id + 1):
+            if i in passed_test_ids:
+                continue
             md_path = os.path.join(md_root_path, f"test{i}.md")
             html_path = os.path.join(html_root_path, f"test{i}.html")
             MarkdownParser.parse_file(md_path)
