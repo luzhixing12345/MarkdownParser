@@ -341,6 +341,7 @@ class CodeBlockHandler(Handler):
                     # 多个单行: 例如 {4,7,9}
                     # 行数区间与多个单行: 例如 {4,7-13,16,23-27,40}
                     if lines_match:
+                        language = re.compile(r'{.*?}').sub('', language)
                         lines = lines_match.group(1).split(',')
                         for line in lines:
                             if line == '':
@@ -354,7 +355,7 @@ class CodeBlockHandler(Handler):
                     root.add_block(CodeBlock(language=language, text=text, highlight_lines=highlight_lines))
         else:
             # 代码段结尾
-            root.add_block(CodeBlock(language="UNKNOWN", text=text))
+            root.add_block(CodeBlock(language="UNKNOWN", text=text, highlight_lines=[]))
 
 
 class CodeBlock(Block):
