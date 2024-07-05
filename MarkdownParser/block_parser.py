@@ -334,7 +334,24 @@ class CodeBlockHandler(Handler):
                     root.add_block(TextBlock(word=text, text=text))
                 else:
                     # 代码段开头
-                    root.add_block(CodeBlock(language=language, text=text))
+                    highlight_lines = []
+                    lines_match = re.compile(r'{(.*?)}').search(language)
+                    
+                    # 行数区间: 例如 {5-8}, {3-10}, {10-17}
+                    # 多个单行: 例如 {4,7,9}
+                    # 行数区间与多个单行: 例如 {4,7-13,16,23-27,40}
+                    if lines_match:
+                        lines = lines_match.group(1).split(',')
+                        for line in lines:
+                            if line == '':
+                                continue
+                            if line.find('-') != -1:
+                                start, end = line.split('-')
+                                for i in range(int(start), int(end) + 1):
+                                    highlight_lines.append(i)
+                            else:
+                                highlight_lines.append(int(line))
+                    root.add_block(CodeBlock(language=language, text=text, highlight_lines=highlight_lines))
         else:
             # 代码段结尾
             root.add_block(CodeBlock(language="UNKNOWN", text=text))
