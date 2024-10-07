@@ -367,7 +367,7 @@ class CodeBlockHandler(Handler):
                     root.add_block(CodeBlock(language=language, text=text, highlight_lines=highlight_lines, highlight_tokens=highlight_tokens))
         else:
             # 代码段结尾
-            root.add_block(CodeBlock(language="UNKNOWN", text=text, highlight_lines=[]))
+            root.add_block(CodeBlock(language="UNKNOWN", text=text, highlight_lines=[], highlight_tokens=[]))
 
 
 class CodeBlock(Block):
@@ -610,7 +610,7 @@ class ReferenceHandler(Handler):
             rf"""(
             \[(.*?)\]\(({web_url_pattern}|.*?)\)|
             <({web_url_pattern})>|
-            \b{web_url_pattern}\b
+            \b{web_url_pattern}
         )""",
             re.VERBOSE,
         )
