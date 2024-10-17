@@ -126,7 +126,7 @@ class Markdown:
         navigator_html = ""
         level = block.input["level"]
         tag = f"h{str(level)}-{str(block.UID)}"
-        word = block.to_text()
+        word = block.to_display_word()
         if len(block.child_blocks) == 0:
             navigator_html = f'<ul><li><a href="#{tag}">{word}</a></li></ul>'
         else:

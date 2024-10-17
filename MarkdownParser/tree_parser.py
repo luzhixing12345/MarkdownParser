@@ -140,7 +140,7 @@ class CodeBlockOptimizer(Optimizer):
         self.target_block_names = ["CodeBlock"]
 
     def __call__(self, root: Block):
-        activite_CodeBlock = None
+        active_codeblock = None
         restore_text = False
         new_sub_blocks = []
         list_hierarchy_indent = 0
@@ -153,9 +153,9 @@ class CodeBlockOptimizer(Optimizer):
                 if block.block_name in self.target_block_names:
                     restore_text = False
                     # 去掉结尾换行符
-                    activite_CodeBlock.input["code"] = activite_CodeBlock.input["code"][:-1]
-                    new_sub_blocks.append(activite_CodeBlock)
-                    activite_CodeBlock = None
+                    active_codeblock.input["code"] = active_codeblock.input["code"][:-1]
+                    new_sub_blocks.append(active_codeblock)
+                    active_codeblock = None
                     continue
                 else:
                     # 对于序列中的层级结构代码段, 需要减去其前面的空格
@@ -163,24 +163,24 @@ class CodeBlockOptimizer(Optimizer):
                         # print(block.input["text"])
                         code_lines = block.input["text"].split("\n")
                         for code_line in code_lines:
-                            activite_CodeBlock.input["code"] += code_line[list_hierarchy_indent:] + "\n"
+                            active_codeblock.input["code"] += code_line[list_hierarchy_indent:] + "\n"
                     else:
                         # print(block.block_name, block.input["text"])
-                        activite_CodeBlock.input["code"] += block.input["text"] + "\n"
+                        active_codeblock.input["code"] += block.to_text() + "\n"
             else:
                 if block.block_name in self.target_block_names:
                     restore_text = True
-                    activite_CodeBlock = block
+                    active_codeblock = block
                     if root.block_name in ["OListBlock", "UListBlock"]:
                         list_hierarchy_indent = root.input["align_space_number"]
                 else:
                     new_sub_blocks.append(block)
 
         # 代码段不匹配,一直到结尾全部恢复为文本
-        if activite_CodeBlock is not None:
+        if active_codeblock is not None:
             # 去掉结尾换行符
-            activite_CodeBlock.input["code"] = activite_CodeBlock.input["code"][:-1]
-            new_sub_blocks.append(activite_CodeBlock)
+            active_codeblock.input["code"] = active_codeblock.input["code"][:-1]
+            new_sub_blocks.append(active_codeblock)
 
         root.sub_blocks = new_sub_blocks
 

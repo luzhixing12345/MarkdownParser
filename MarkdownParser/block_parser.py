@@ -40,6 +40,13 @@ class ComplexBlock(Block):
 
         return content
 
+    def to_display_word(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_display_word()
+
+        return content
+
     def to_text(self):
         content = ""
         for block in self.sub_blocks:
@@ -434,13 +441,13 @@ class HashHeaderBlock(Block):
             tag_id = ""
         return f"<{tag} {tag_id}>{self.sub_blocks[0].to_html()}</{tag}>"
 
-    def to_text(self):
+    def to_display_word(self):
         """
         纯文字形式
         """
         word = ""
         for block in self.sub_blocks:
-            word += block.to_text()
+            word += block.to_display_word()
         return word
 
 
@@ -509,12 +516,13 @@ class OListBlock(Block):
         serial_number = self.input["serial_number"]
         return f'<ol start="{serial_number}"><li>{content}</li></ol>'
 
-    def to_text(self):
+    def to_display_word(self):
         content = ""
         for block in self.sub_blocks:
-            content += block.to_text()
+            content += block.to_display_word()
         serial_number = self.input["serial_number"]
         return f"{serial_number}. {content}"
+
 
 class UListHandler(Handler):
     def __init__(self) -> None:
@@ -735,11 +743,33 @@ class SpecialTextBlock(Block):
         else:  # pragma: no cover
             raise ValueError(f"unknown tag {tag}")
 
-    def to_text(self):
+    def to_display_word(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_display_word()
+        return content
+
+    def to_text(self): # pragma: no cover
         content = ""
         for block in self.sub_blocks:
             content += block.to_text()
-        return content
+            
+        tag = self.input["tag"]
+        if tag == "bold_italics":
+            return f"***{content}***"
+        elif tag == "bold":
+            return f"**{content}**"
+        elif tag == "italic":
+            return f"*{content}*"
+        elif tag == "delete":
+            return f"~~{content}~~"
+        elif tag == "highlight1":
+            return f"``{content}``"
+        elif tag == "highlight2":
+            return f"`{content}`"
+        else:  # pragma: no cover
+            raise ValueError(f"unknown tag {tag}")
+
 
 class TableHandler(Handler):
     # 处理表格
