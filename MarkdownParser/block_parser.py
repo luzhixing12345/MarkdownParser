@@ -40,6 +40,12 @@ class ComplexBlock(Block):
 
         return content
 
+    def to_text(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_text()
+
+        return content
 
 class HTMLBlock(Block):
     # 处理HTML标签
@@ -336,35 +342,43 @@ class CodeBlockHandler(Handler):
                     # 代码段开头
                     highlight_lines = []
                     highlight_tokens = []
-                    lines_match = re.compile(r'{(.*?)}').search(language)
-                    
+                    lines_match = re.compile(r"{(.*?)}").search(language)
+
                     # 行数区间: 例如 {5-8}, {3-10}, {10-17}
                     # 多个单行: 例如 {4,7,9}
                     # 行数区间与多个单行: 例如 {4,7-13,16,23-27,40}
                     # 高亮某一个 token 使用 #: {#3,#5-7}
                     if lines_match:
-                        language = re.compile(r'{.*?}').sub('', language).strip()
-                        lines = lines_match.group(1).split(',')
+                        language = re.compile(r"{.*?}").sub("", language).strip()
+                        lines = lines_match.group(1).split(",")
                         for line in lines:
-                            if line == '':
+                            line = line.strip()
+                            if line == "":
                                 continue
-                            if line.startswith('#'):
+                            if line.startswith("#"):
                                 # 高亮某一个 token
                                 line = line[1:]
-                                if line.find('-') != -1:
-                                    start, end = line.split('-')
+                                if line.find("-") != -1:
+                                    start, end = line.split("-")
                                     for i in range(int(start), int(end) + 1):
                                         highlight_tokens.append(i)
                                 else:
                                     highlight_tokens.append(int(line))
                             else:
-                                if line.find('-') != -1:
-                                    start, end = line.split('-')
+                                if line.find("-") != -1:
+                                    start, end = line.split("-")
                                     for i in range(int(start), int(end) + 1):
                                         highlight_lines.append(i)
                                 else:
                                     highlight_lines.append(int(line))
-                    root.add_block(CodeBlock(language=language, text=text, highlight_lines=highlight_lines, highlight_tokens=highlight_tokens))
+                    root.add_block(
+                        CodeBlock(
+                            language=language,
+                            text=text,
+                            highlight_lines=highlight_lines,
+                            highlight_tokens=highlight_tokens,
+                        )
+                    )
         else:
             # 代码段结尾
             root.add_block(CodeBlock(language="UNKNOWN", text=text, highlight_lines=[], highlight_tokens=[]))
@@ -420,17 +434,13 @@ class HashHeaderBlock(Block):
             tag_id = ""
         return f"<{tag} {tag_id}>{self.sub_blocks[0].to_html()}</{tag}>"
 
-    def to_href(self):
+    def to_text(self):
         """
         纯文字形式
         """
         word = ""
-        if self.sub_blocks[0].block_name == "ComplexBlock":
-            block = self.sub_blocks[0]
-            for sblock in block.sub_blocks:
-                word += sblock.input["word"]
-        else:
-            word = self.sub_blocks[0].input["word"]
+        for block in self.sub_blocks:
+            word += block.to_text()
         return word
 
 
@@ -499,6 +509,12 @@ class OListBlock(Block):
         serial_number = self.input["serial_number"]
         return f'<ol start="{serial_number}"><li>{content}</li></ol>'
 
+    def to_text(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_text()
+        serial_number = self.input["serial_number"]
+        return f"{serial_number}. {content}"
 
 class UListHandler(Handler):
     def __init__(self) -> None:
@@ -719,6 +735,11 @@ class SpecialTextBlock(Block):
         else:  # pragma: no cover
             raise ValueError(f"unknown tag {tag}")
 
+    def to_text(self):
+        content = ""
+        for block in self.sub_blocks:
+            content += block.to_text()
+        return content
 
 class TableHandler(Handler):
     # 处理表格

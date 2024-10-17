@@ -154,6 +154,14 @@ class Block:
             return f"<div class='markdown-body'>{content}</div>"
 
 
+    def to_text(self):
+        if self.input.get('word'):
+            return self.input['word']
+        elif self.input.get('text'): # pragma: no cover
+            return self.input['text']
+        else: # pragma: no cover
+            return ''
+
 class Handler:
     def __init__(self) -> None:
         self.RE: re.Pattern = None

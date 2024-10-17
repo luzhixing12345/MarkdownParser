@@ -70,3 +70,12 @@ asdkl
 asdkl;a
 asdkl
 ```
+
+```c{#1,#4, #5,   #6  , #7-8, #9 - 10}
+asdl
+askdl;a
+asdkla
+asdkl
+asdkl;a
+asdkl
+```
