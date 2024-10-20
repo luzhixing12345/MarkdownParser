@@ -32,7 +32,7 @@ jobs:
         COVERAGE_RUN: True
 
     - name: Upload test results to Codecov
-      uses: codecov/test-results-action@v4
+      uses: codecov-action@v4
       with:
         file: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
