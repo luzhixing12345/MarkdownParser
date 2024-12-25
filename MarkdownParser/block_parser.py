@@ -350,6 +350,7 @@ class CodeBlockHandler(Handler):
                     # ```c{3,5}
                     # int main
                     # ```
+                    # 将信息提取出来保存在 append_text
                     append_text_group = re.compile(r"{(.*?)}").search(language)
                     append_text = append_text_group.group(1) if append_text_group else None
                     root.add_block(
