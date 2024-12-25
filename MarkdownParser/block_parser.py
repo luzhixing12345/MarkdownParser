@@ -353,6 +353,9 @@ class CodeBlockHandler(Handler):
                     # 将信息提取出来保存在 append_text
                     append_text_group = re.compile(r"{(.*?)}").search(language)
                     append_text = append_text_group.group(1) if append_text_group else None
+                    
+                    # 去除高亮信息, 更新 language 名字
+                    language = re.compile(r"{.*?}").sub("", language).strip()
                     root.add_block(
                         CodeBlock(
                             language=language,
