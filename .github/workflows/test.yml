@@ -36,3 +36,5 @@ jobs:
       with:
         file: ./coverage.xml
         token: ${{ secrets.CODECOV_TOKEN }}
+
+# https://github.com/codecov/codecov-action/issues/598

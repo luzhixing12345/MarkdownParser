@@ -346,49 +346,22 @@ class CodeBlockHandler(Handler):
                     # int main
                     root.add_block(TextBlock(word=text, text=text))
                 else:
-                    # 代码段开头
-                    highlight_lines = []
-                    highlight_tokens = []
-                    lines_match = re.compile(r"{(.*?)}").search(language)
-
-                    # 行数区间: 例如 {5-8}, {3-10}, {10-17}
-                    # 多个单行: 例如 {4,7,9}
-                    # 行数区间与多个单行: 例如 {4,7-13,16,23-27,40}
-                    # 高亮某一个 token 使用 #: {#3,#5-7}
-                    if lines_match:
-                        language = re.compile(r"{.*?}").sub("", language).strip()
-                        lines = lines_match.group(1).split(",")
-                        for line in lines:
-                            line = line.strip()
-                            if line == "":
-                                continue
-                            if line.startswith("#"):
-                                # 高亮某一个 token
-                                line = line[1:]
-                                if line.find("-") != -1:
-                                    start, end = line.split("-")
-                                    for i in range(int(start), int(end) + 1):
-                                        highlight_tokens.append(i)
-                                else:
-                                    highlight_tokens.append(int(line))
-                            else:
-                                if line.find("-") != -1:
-                                    start, end = line.split("-")
-                                    for i in range(int(start), int(end) + 1):
-                                        highlight_lines.append(i)
-                                else:
-                                    highlight_lines.append(int(line))
+                    # 用户可能会在 language 这里添加高亮信息
+                    # ```c{3,5}
+                    # int main
+                    # ```
+                    append_text_group = re.compile(r"{(.*?)}").search(language)
+                    append_text = append_text_group.group(1) if append_text_group else None
                     root.add_block(
                         CodeBlock(
                             language=language,
                             text=text,
-                            highlight_lines=highlight_lines,
-                            highlight_tokens=highlight_tokens,
+                            append_text=append_text,
                         )
                     )
         else:
             # 代码段结尾
-            root.add_block(CodeBlock(language="UNKNOWN", text=text, highlight_lines=[], highlight_tokens=[]))
+            root.add_block(CodeBlock(language="UNKNOWN", text=text, append_text=None))
 
 
 class CodeBlock(Block):

@@ -41,5 +41,5 @@ class TestMyMdParser(unittest.TestCase):
         print("all tests passed!")
 
 
-if __name__ == "__main__":
+if __name__ == "__main__": # pragma: no cover
     unittest.main()
