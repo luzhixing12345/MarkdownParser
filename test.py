@@ -13,7 +13,7 @@ class TestMyMdParser(unittest.TestCase):
         html_root_path = f"./testfiles/html"
         MarkdownParser.parse("")
         MarkdownParser.parse("# Heading")
-        MarkdownParser.parse_toc("")
+        MarkdownParser.parse("", toc=True)
 
         failed_test_ids = []
 
@@ -21,7 +21,7 @@ class TestMyMdParser(unittest.TestCase):
             md_path = os.path.join(md_root_path, f"test{i}.md")
             html_path = os.path.join(html_root_path, f"test{i}.html")
             MarkdownParser.parse_file(md_path)
-            html = MarkdownParser.parse_file_toc(md_path)
+            html = MarkdownParser.parse_file(md_path, toc=True)
 
             # with open(html_path, "w", encoding="utf-8") as f:
             #     f.write(html)

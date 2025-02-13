@@ -2,7 +2,7 @@
 
 [![codecov](https://codecov.io/gh/luzhixing12345/MarkdownParser/branch/main/graph/badge.svg?)](https://codecov.io/gh/luzhixing12345/MarkdownParser)
 
-MarkdownParser 是一个 Markdown 语法解析器,用于实现 md 到 html 标签的转换
+MarkdownParser 是一个 Markdown 语法解析器,用于实现 markdown 文本到 html 文本的转换
 
 ## 安装
 
@@ -10,7 +10,7 @@ MarkdownParser 是一个 Markdown 语法解析器,用于实现 md 到 html 标�
 pip install markdownparser
 ```
 
-## 快速使用
+## 快速开始
 
 ```python
 import MarkdownParser
@@ -21,27 +21,23 @@ print(html)
 #<div class='markdown-body'><h1>Hello World!</h1></div>
 ```
 
-接口函数
+两个简单易用的接口函数
 
 ```python
 # 解析 markdown 文本转 html
-def parse(text: str) -> str:
+def parse(text: str, toc = False) -> str:
+    ...
 
 # 解析 md 文件转 html
-def parse_file(file_name: str) -> str:
-
-# 解析 markdown 文本, 带目录树
-def parse_toc(text: str) -> str:
-
-# 解析 md 文件, 带目录树
-def parse_file_toc(file_name: str) -> str:
+def parse_file(file_name: str, toc = False) -> str:
+    ...
 ```
 
 接口类 Markdown, Block
 
 ## 结果预览与 Markdown 功能测试
 
-本仓库下提供了了一个快速验证转换结果的工具 generate.py
+本仓库下提供了了一个快速验证转换结果的工具 generate.py, 跟一个文件名即可快速验证预览本库的转换结果是否正确
 
 ```bash
 python generate.py <FILE_NAME>
@@ -50,31 +46,9 @@ python generate.py <FILE_NAME>
 # python generate.py README.md
 ```
 
-运行会生成index.html, 使用浏览器打开生成的index.html即可与您预期的渲染结果对比, README 的渲染结果如下所示
+运行会生成index.html, 使用浏览器打开生成的index.html即可与您预期的渲染结果对比
 
 ![20230218202400](https://raw.githubusercontent.com/learner-lu/picbed/master/20230218202400.png)
-
-## 实现思路
-
-[Markdown解析器的代码实现](https://www.bilibili.com/video/BV1LA411X7X3)
-
-您可通过取消 [core.py](./MarkdownParser/core.py) 注释来获取树的结构
-
-```python
-def parse(self, text: str) -> str:
-
-    # 去除空行/注释/html标签
-    lines = self.preprocess_parser(text)
-    # print(lines)
-    # 逐行解析,得到一颗未优化的树
-    root = self.block_parser(lines)
-    # root.info()
-    # 优化,得到正确的markdown解析树
-    tree = self.tree_parser(root)
-    # tree.info()
-    # 输出到屏幕 / 导出html文件
-    return tree.toHTML()
-```
 
 ## 不支持
 
@@ -85,6 +59,8 @@ def parse(self, text: str) -> str:
 - `<details><summary></summary></details>` 折叠块
 
 ## HTML 结果说明
+
+众所周知 Markdown 转换后的 html 文本还需要 css 美化, 本仓库下提供了一个 index.css 作为参考(Github Markdown 主题)
 
 - 生成的结果会以 "markdown-body" 类名的一个 `div` 包裹
 
@@ -105,7 +81,9 @@ def parse(self, text: str) -> str:
   }
   ```
 
-- 您可以使用 `parse_toc` 将 HashHeadBlock 提取出来组成目录树, 得到一个 `<div class="header-navigator">...</div>` 并添加到返回的 HTML 元素中, 您可能还需要一些 js 相关的代码实现跳转, 具体可以参考 [template.html](./template.html)
+- toc 参数用于标记跳转, 如果设置 toc=True 则会将所有标签(#)组成目录树, 除 "markdown-body" 外额外生成一个 `<div class="header-navigator">...</div>` 用于导航
+  
+  辅助一些 js 相关的代码即可实现跳转, 具体可以参考 [template.html](./template.html)
 
   ```js
   let links = document.querySelectorAll('div a[href^="#"]');
@@ -157,7 +135,27 @@ def parse(self, text: str) -> str:
   </script>
   ```
 
-  注意,这里仅支持很少一部分数学公式
+## 实现思路
+
+[Markdown解析器的代码实现](https://www.bilibili.com/video/BV1LA411X7X3)
+
+您可通过取消 [core.py](./MarkdownParser/core.py) 注释来获取树的结构
+
+```python
+def parse(self, text: str) -> str:
+
+    # 去除空行/注释/html标签
+    lines = self.preprocess_parser(text)
+    # print(lines)
+    # 逐行解析,得到一颗未优化的树
+    root = self.block_parser(lines)
+    # root.info()
+    # 优化,得到正确的markdown解析树
+    tree = self.tree_parser(root)
+    # tree.info()
+    # 输出到屏幕 / 导出html文件
+    return tree.toHTML()
+```
 
 ## 参考
 

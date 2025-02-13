@@ -13,7 +13,7 @@ class Markdown:
         self.block_parser = build_block_parser()
         self.tree_parser = build_tree_parser()
 
-    def parse(self, text: str) -> str:
+    def parse(self, text: str, toc=False) -> str:
         # 去除空行/注释/html标签
         lines = self.preprocess_parser(text)
         # print(lines)
@@ -24,20 +24,7 @@ class Markdown:
         tree = self.tree_parser(root)
         # tree.info()
         # 输出到屏幕 / 导出html文件
-        return tree.to_html()
-
-    def parse_with_tag(self, text: str):
-        # 去除空行/注释/html标签
-        lines = self.preprocess_parser(text)
-        # print(lines)
-        # 逐行解析,得到一颗未优化的树
-        root = self.block_parser(lines)
-        # root.info()
-        # 优化,得到正确的markdown解析树
-        tree = self.tree_parser(root)
-        # tree.info()
-        # 输出到屏幕 / 导出html文件
-        header_navigater = self.get_toc(tree)
+        header_navigater = self.get_toc(tree) if toc is True else None
         return tree.to_html(header_navigater)
 
     def get_toc(self, tree: Block):
@@ -138,7 +125,7 @@ class Markdown:
         return navigator_html
 
 
-def parse(text: str) -> str:
+def parse(text: str, toc=False) -> str:
     """
     解析 markdown 文本转 html
     """
@@ -149,10 +136,10 @@ def parse(text: str) -> str:
         return ""
 
     md = Markdown()
-    return md.parse(text)
+    return md.parse(text, toc=toc)
 
 
-def parse_file(file_name: str) -> str:
+def parse_file(file_name: str, toc=False) -> str:
     """
     解析 md 文件转 html
     """
@@ -161,28 +148,4 @@ def parse_file(file_name: str) -> str:
     with open(file_name, "r", encoding="utf-8") as f:
         text = f.read()
 
-    return parse(text)
-
-
-def parse_toc(text: str) -> str:
-    """
-    解析 markdown 文本, 带目录树
-    """
-    assert type(text) == str, "输入应为字符串"
-
-    # 空输入
-    if not text.strip():
-        return ""
-
-    md = Markdown()
-    return md.parse_with_tag(text)
-
-
-def parse_file_toc(file_name: str) -> str:
-    """
-    解析 md 文件, 带目录树
-    """
-    with open(file_name, "r", encoding="utf-8") as f:
-        text = f.read()
-
-    return parse_toc(text)
+    return parse(text, toc=toc)
