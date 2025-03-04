@@ -1,6 +1,6 @@
 # MarkdownParser
 
-[![codecov](https://codecov.io/gh/luzhixing12345/MarkdownParser/branch/main/graph/badge.svg?)](https://codecov.io/gh/luzhixing12345/MarkdownParser)
+[![PyPI download month](https://img.shields.io/pypi/dm/MarkdownParser.svg)](https://pypi.python.org/pypi/MarkdownParser/) [![PyPI versionfury.io](https://badge.fury.io/py/MarkdownParser.svg)](https://pypi.python.org/pypi/MarkdownParser/) [![PyPI pyversions](https://img.shields.io/pypi/pyversions/MarkdownParser.svg)](https://pypi.python.org/pypi/MarkdownParser/) [![codecov](https://codecov.io/gh/luzhixing12345/MarkdownParser/branch/main/graph/badge.svg?)](https://codecov.io/gh/luzhixing12345/MarkdownParser)
 
 MarkdownParser 是一个 Markdown 语法解析器,用于实现 markdown 文本到 html 文本的转换
 
