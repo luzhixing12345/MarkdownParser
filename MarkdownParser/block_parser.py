@@ -546,6 +546,7 @@ class QuoteHandler(Handler):
 class QuoteBlock(Block):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
+        self.input['align_space_number'] = 0
 
     def to_html(self):
         content = ""
